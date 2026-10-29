@@ -1,9 +1,11 @@
 import React from 'react';
-import { Quote } from 'lucide-react';
+import { Pencil, Quote, Trash2 } from 'lucide-react';
 import type { Note } from '~/lib/library';
 
 interface NoteCardProps {
   note: Note;
+  onEdit: (note: Note) => void;
+  onDelete: (note: Note) => void;
 }
 
 function formatNoteDate(dateStr: string) {
@@ -20,7 +22,7 @@ function formatNoteDate(dateStr: string) {
   }
 }
 
-export default function NoteCard({ note }: NoteCardProps) {
+export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
   const displayTitle =
     note.resource && typeof note.resource === 'object' && note.resource.title
       ? note.resource.title
@@ -75,6 +77,28 @@ export default function NoteCard({ note }: NoteCardProps) {
               No tags
             </span>
           )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => onEdit(note)}
+            aria-label={`Edit note for ${displayTitle}`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#3E6AE1] hover:text-[#2D58CC] transition-colors cursor-pointer"
+          >
+            <Pencil className="w-3 h-3" />
+            <span>Edit</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onDelete(note)}
+            aria-label={`Delete note for ${displayTitle}`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 transition-colors cursor-pointer ml-1"
+          >
+            <Trash2 className="w-3 h-3" />
+            <span>Delete</span>
+          </button>
         </div>
       </div>
     </div>

@@ -6,11 +6,15 @@ import type { Note } from '~/lib/library';
 interface NotesGridProps {
   notes: Note[];
   isFiltered?: boolean;
+  onEdit: (note: Note) => void;
+  onDelete: (note: Note) => void;
 }
 
 export default function NotesGrid({
   notes,
   isFiltered = false,
+  onEdit,
+  onDelete,
 }: NotesGridProps) {
   if (notes.length === 0) {
     return (
@@ -31,7 +35,12 @@ export default function NotesGrid({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {notes.map((note) => (
-        <NoteCard key={note._id} note={note} />
+        <NoteCard
+          key={note._id}
+          note={note}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   );

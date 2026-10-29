@@ -1,8 +1,22 @@
-import { api } from './api';
+import { api, apiUpload, BASE_URL } from './api';
 
 export type ResourceType = 'Book' | 'Article' | 'YouTube' | 'Documentary';
 export type ResourceStatus = 'Plan to Do' | 'In Progress' | 'Completed';
 export type ResourceCategory = 'Productivity' | 'Focus' | 'Finance' | 'Philosophy';
+
+export interface EpubProgress {
+  cfi: string;
+  percentage: number;
+  updatedAt: string;
+}
+
+export interface AttachmentMetadata {
+  fileName: string;
+  mimeType: string;
+  size: number;
+  uploadedAt: string;
+  epubProgress?: EpubProgress;
+}
 
 export interface Resource {
   _id: string;
@@ -18,6 +32,7 @@ export interface Resource {
   summary?: string;
   rating?: number;
   progress: number;
+  attachment?: AttachmentMetadata;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,6 +147,37 @@ export async function deleteResource(id: string): Promise<void> {
   return api<void>(`/resources/${id}`, {
     method: 'DELETE',
   });
+}
+
+export async function uploadBookAttachment(
+  id: string,
+  file: File,
+): Promise<Resource> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return apiUpload<Resource>(`/resources/${id}/attachment`, formData, {
+    method: 'POST',
+  });
+}
+
+export async function deleteBookAttachment(id: string): Promise<Resource> {
+  return api<Resource>(`/resources/${id}/attachment`, {
+    method: 'DELETE',
+  });
+}
+
+export async function updateEpubReadingProgress(
+  id: string,
+  data: { cfi: string; percentage: number },
+): Promise<Resource> {
+  return api<Resource>(`/resources/${id}/attachment/progress`, {
+    method: 'PATCH',
+    body: data,
+  });
+}
+
+export function getBookAttachmentStreamUrl(id: string): string {
+  return `${BASE_URL}/resources/${id}/attachment`;
 }
 
 // -------------------------------------------------------------

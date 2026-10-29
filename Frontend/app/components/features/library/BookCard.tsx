@@ -30,6 +30,16 @@ export default function BookCard({ book, onClick }: BookCardProps) {
       ? Math.min(100, Math.round(((book.currentPage || 0) / book.pages) * 100))
       : 0;
 
+  const hasAttachment = Boolean(
+    book.attachment &&
+      (book.attachment.fileName || book.attachment.mimeType),
+  );
+  const isEpub = Boolean(
+    hasAttachment &&
+      (book.attachment?.mimeType === 'application/epub+zip' ||
+        book.attachment?.fileName?.toLowerCase().endsWith('.epub')),
+  );
+
   return (
     <div
       onClick={onClick}
@@ -40,7 +50,20 @@ export default function BookCard({ book, onClick }: BookCardProps) {
         <span className="text-[10px] font-bold uppercase tracking-wider text-[#3E6AE1] bg-[#3E6AE1]/10 px-2 py-0.5 rounded">
           {book.category || 'Book'}
         </span>
-        <Bookmark className="w-4 h-4 text-[#5C5E62] group-hover:text-[#171A20] transition-colors" />
+        <div className="flex items-center gap-1.5">
+          {hasAttachment && (
+            <span
+              className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                isEpub
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-blue-50 text-blue-700 border border-blue-200'
+              }`}
+            >
+              {isEpub ? 'EPUB' : 'PDF'}
+            </span>
+          )}
+          <Bookmark className="w-4 h-4 text-[#5C5E62] group-hover:text-[#171A20] transition-colors" />
+        </div>
       </div>
 
       {/* 3D Interactive Book Graphic Simulation */}
