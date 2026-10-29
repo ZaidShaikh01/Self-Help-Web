@@ -41,10 +41,10 @@ export default function GuestLayout() {
   if (checkedPath !== pathname) {
     return (
       <main
-        className="min-h-screen grid place-items-center bg-white text-sm text-[#5C5E62]"
+        className="min-h-screen grid place-items-center bg-[var(--canvas)] font-mono text-xs uppercase tracking-widest text-[var(--text-3)]"
         role="status"
       >
-        Checking your session...
+        Checking your session…
       </main>
     );
   }

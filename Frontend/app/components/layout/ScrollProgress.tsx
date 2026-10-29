@@ -45,17 +45,17 @@ export default function ScrollProgress() {
   }, []);
 
   return (
-    <div className='relative h-[3px] w-full bg-gray-200/70'>
+    <div className='relative h-[2px] w-full bg-[var(--border-subtle)]'>
       <div
         ref={barRef}
-        className='absolute inset-0 origin-left bg-[#ff3d00]'
+        className='absolute inset-0 origin-left bg-[var(--accent)]'
         style={{
           transform: 'scaleX(0)',
           willChange: 'transform',
         }}
       />
 
-      <span className='absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono leading-none text-gray-500'>
+      <span className='absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-mono leading-none text-[var(--text-3)]'>
         {progress}%
       </span>
     </div>

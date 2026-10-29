@@ -1,0 +1,135 @@
+/**
+ * SelfgrowthOS Design System - Layout & Shell
+ */
+
+.app-root {
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--text);
+  position: relative;
+}
+
+.app-stage {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 220ms ease;
+  background: var(--canvas);
+}
+
+.app-stage.is-collapsed {
+  margin-left: var(--sidebar-rail-width);
+}
+
+.utility-bar {
+  height: 58px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(16px, 3vw, 32px);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--border);
+}
+
+.main-content {
+  flex: 1;
+  padding: clamp(20px, 3.5vw, 48px);
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Brand Mark (3 architectural bars) */
+.brand-mark {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+}
+
+.brand-mark i {
+  display: block;
+  width: 4px;
+  background: var(--text);
+  border-radius: 1px;
+}
+
+.brand-mark i:nth-child(1) {
+  height: 19px;
+}
+
+.brand-mark i:nth-child(2) {
+  height: 14px;
+}
+
+.brand-mark i:nth-child(3) {
+  height: 20px;
+  background: var(--accent);
+}
+
+/* Mobile Navigation Bar */
+.mobile-nav {
+  display: none;
+}
+
+/* Responsive Shell */
+@media (max-width: 768px) {
+  .app-stage,
+  .app-stage.is-collapsed {
+    margin-left: 0;
+    padding-bottom: 72px; /* space for mobile nav */
+  }
+
+  .utility-bar {
+    height: 54px;
+    padding-inline: 14px;
+  }
+
+  .main-content {
+    padding: 18px 14px;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    z-index: 60;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 60px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 95%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-nav a,
+  .mobile-nav button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 8px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 8px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 150ms ease, background 150ms ease;
+  }
+
+  .mobile-nav a.is-active,
+  .mobile-nav button.is-active {
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    font-weight: 600;
+  }
+}

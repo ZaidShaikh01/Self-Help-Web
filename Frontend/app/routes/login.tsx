@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { Link, replace, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { loginRequest } from '~/lib/auth';
 import { AuthLayout } from '~/components/auth/AuthLayout';
 
@@ -21,9 +21,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
 
@@ -38,11 +36,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       await loginRequest(email.trim(), password);
 
       onLoginSuccess?.(email.trim());
-      navigate('/dashboard', { replace: true});
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Login failed.'
-      );
+      setError(err instanceof Error ? err.message : 'Login failed.');
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +55,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       }
       description="Return to the practices, reflections, and learning you have kept connected."
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form" onSubmit={handleSubmit} noValidate>
         {error && (
           <div className="auth-error" role="alert">
             <strong>We couldn't sign you in.</strong>
@@ -67,7 +63,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </div>
         )}
 
-        {/* Email */}
+        {/* Email Address */}
         <label className="auth-field" htmlFor="login-email">
           <span>Email address</span>
 
@@ -77,6 +73,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             type="email"
             autoComplete="email"
             required
+            aria-required="true"
+            aria-invalid={Boolean(error)}
             placeholder="alex@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -92,9 +90,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               type="button"
               className="auth-forgot"
               onClick={() =>
-                window.alert(
-                  'Connect your password recovery flow here.'
-                )
+                window.alert('Connect your password recovery flow here.')
               }
             >
               Forgot password?
@@ -108,41 +104,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               required
+              aria-required="true"
+              aria-invalid={Boolean(error)}
               placeholder="Enter your password"
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
+              onChange={(event) => setPassword(event.target.value)}
             />
 
             <button
               type="button"
               className="auth-password__toggle"
-              onClick={() =>
-                setShowPassword((visible) => !visible)
-              }
-              aria-label={
-                showPassword ? 'Hide password' : 'Show password'
-              }
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? (
-                <EyeOff size={16} />
-              ) : (
-                <Eye size={16} />
-              )}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
         </label>
 
-        {/* Submit */}
-        <button
-          className="auth-submit"
-          type="submit"
-          disabled={isLoading}
-        >
+        {/* Submit Button */}
+        <button className="auth-submit" type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <span className="auth-spinner" />
+              <span className="auth-spinner" aria-hidden="true" />
               Signing in…
             </>
           ) : (
@@ -154,7 +138,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         </button>
       </form>
 
-      {/* Social Login */}
+      {/* Social Login & Signup Navigation */}
       <div className="auth-social">
         <div className="auth-divider">
           <span>Or continue with</span>
@@ -163,14 +147,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <button
           type="button"
           className="auth-google"
-          onClick={() =>
-            window.alert('Google sign-in is not connected yet.')
-          }
+          onClick={() => window.alert('Google sign-in is not connected yet.')}
         >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-          >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -188,16 +167,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-
           Continue with Google
         </button>
 
         <p className="auth-switch">
           Don't have an account?{' '}
-          <Link
-            to="/signup"
-            onClick={onNavigateToSignUp}
-          >
+          <Link to="/signup" onClick={onNavigateToSignUp}>
             Create an account
           </Link>
         </p>

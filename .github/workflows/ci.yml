@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel an older run of the same branch when a new commit arrives
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# CI only reads the repo
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  backend:
+    name: Backend (install, load check, audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Imports the whole app (routes, models, validators) with throwaway env
+      # values. It catches broken imports and bad env validation without a database.
+      - name: Load check
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://127.0.0.1:27017/ci
+          CORS_ORIGIN: http://localhost:5173
+          ACCESS_TOKEN_SECRET: ci-access-secret-not-a-real-secret-0000000
+          REFRESH_TOKEN_SECRET: ci-refresh-secret-not-a-real-secret-111111
+        run: |
+          node --input-type=module -e "
+            const { app } = await import('./src/app.js');
+            if (typeof app !== 'function') throw new Error('app did not load');
+            console.log('app loaded');
+            process.exit(0);
+          "
+
+      - name: Dependency audit (high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+  frontend:
+    name: Frontend (typecheck, build, audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Dependency audit (high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+  format:
+    name: Format check (report only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Report-only for now. Remove continue-on-error after the one-time
+    # formatting commit, then this becomes a required check.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Prettier check
+        run: |
+          npx --yes prettier@3.9.10 --check "Backend/src/**/*.js" "Frontend/app/**/*.{ts,tsx,css}"
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, so old commits are scanned too
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker:
+    name: Frontend image build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build (not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: Frontend
+          push: false
+          tags: growth-os-frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
