@@ -1,0 +1,43 @@
+/**
+ * SelfgrowthOS Design System - Dashboard Page Styles
+ */
+
+.dashboard-page {
+  padding-top: 8px;
+}
+
+.dashboard-hero {
+  padding: 24px 28px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  margin-bottom: 24px;
+}
+
+.dashboard-hero .quote-text {
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text);
+  margin: 8px 0;
+}
+
+.dashboard-hero .quote-author {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
