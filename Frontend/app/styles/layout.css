@@ -43,6 +43,39 @@
   margin: 0 auto;
 }
 
+/* Brand Mark (3 architectural bars) */
+.brand-mark {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+}
+
+.brand-mark i {
+  display: block;
+  width: 4px;
+  background: var(--text);
+  border-radius: 1px;
+}
+
+.brand-mark i:nth-child(1) {
+  height: 19px;
+}
+
+.brand-mark i:nth-child(2) {
+  height: 14px;
+}
+
+.brand-mark i:nth-child(3) {
+  height: 20px;
+  background: var(--accent);
+}
+
+/* Mobile Navigation Bar */
+.mobile-nav {
+  display: none;
+}
+
 /* Responsive Shell */
 @media (max-width: 768px) {
   .app-stage,
@@ -58,5 +91,45 @@
 
   .main-content {
     padding: 18px 14px;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    z-index: 60;
+    left: 12px;
+    right: 12px;
+    bottom: 10px;
+    height: 60px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 5px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface) 95%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-nav a,
+  .mobile-nav button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 8px;
+    color: var(--text-3);
+    font-family: var(--mono);
+    font-size: 8px;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: color 150ms ease, background 150ms ease;
+  }
+
+  .mobile-nav a.is-active,
+  .mobile-nav button.is-active {
+    color: var(--accent-text);
+    background: var(--accent-soft);
+    font-weight: 600;
   }
 }

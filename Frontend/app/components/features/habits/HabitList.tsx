@@ -1,9 +1,8 @@
-
-import { LoaderCircle, Target } from 'lucide-react';
-
+import { Button } from '~/components/ui/Button';
+import { Icon } from '~/components/ui/Icon';
+import HabitRow from './HabitRow';
 import type { Habit, TodayHabit } from '~/lib/habits';
 import type { ProgressChange } from '~/hooks/useHabits';
-import HabitRow from './HabitRow';
 
 interface HabitListProps {
   habits: Habit[];
@@ -24,9 +23,6 @@ interface HabitListProps {
   ) => void;
   onCreate: () => void;
 }
-
-const primaryButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg bg-[#fa3600] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#d92f00]';
 
 export default function HabitList({
   habits,
@@ -53,17 +49,17 @@ export default function HabitList({
   return (
     <>
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-[#e7e7e2] bg-white p-10 text-sm text-[#72726f]">
-          <LoaderCircle size={18} className="animate-spin" />
-          Loading habits...
+        <div className="flex items-center justify-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-10 font-mono text-xs uppercase tracking-wider text-[var(--text-3)]">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+          Loading habits…
         </div>
       ) : habits.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#d8d8d3] bg-white px-6 py-12 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#fff0eb] text-[#fa3600]">
-            <Target size={23} />
+        <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-12 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+            <Icon name="focus" size={22} />
           </div>
 
-          <h3 className="mt-4 text-lg font-medium">
+          <h3 className="mt-4 text-base font-semibold text-[var(--text)]">
             {!noFilters
               ? 'No matching habits'
               : showArchived
@@ -71,7 +67,7 @@ export default function HabitList({
                 : 'Start with one small habit'}
           </h3>
 
-          <p className="mx-auto mt-2 max-w-sm text-sm text-[#72726f]">
+          <p className="mx-auto mt-1.5 max-w-sm text-xs text-[var(--text-3)]">
             {!noFilters
               ? 'Try changing your search or tag filter.'
               : showArchived
@@ -80,24 +76,21 @@ export default function HabitList({
           </p>
 
           {!showArchived && noFilters && (
-            <button
-              type="button"
-              onClick={onCreate}
-              className={`${primaryButtonClass} mt-5`}
-            >
-              Create your first habit
-            </button>
+            <div className="mt-5">
+              <Button variant="primary" onClick={onCreate}>
+                <Icon name="plus" size={16} />
+                Create your first habit
+              </Button>
+            </div>
           )}
         </div>
       ) : (
-        <div className="divide-y divide-[#ededE8] overflow-hidden rounded-xl border border-[#e7e7e2] bg-white">
+        <div className="divide-y divide-[var(--border-subtle)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
           {habits.map((habit) => (
             <HabitRow
               key={habit._id}
               habit={habit}
-              todayRecord={
-                showArchived ? undefined : todayById.get(habit._id)
-              }
+              todayRecord={showArchived ? undefined : todayById.get(habit._id)}
               showArchived={showArchived}
               isUpdating={updatingId === habit._id}
               onEdit={onEdit}
@@ -111,7 +104,7 @@ export default function HabitList({
       )}
 
       {!isLoading && totalHabits > 0 && (
-        <p className="text-right text-xs text-[#858580]">
+        <p className="text-right font-mono text-[10px] text-[var(--text-3)]">
           Showing {habits.length} of {totalHabits}{' '}
           {showArchived ? 'archived habits' : 'habits'}
         </p>

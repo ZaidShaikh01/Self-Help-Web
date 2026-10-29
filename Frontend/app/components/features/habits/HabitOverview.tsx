@@ -1,6 +1,4 @@
-
-import { CalendarDays, Check, Target } from 'lucide-react';
-
+import { Icon } from '~/components/ui/Icon';
 import type { HabitWeeklySummary, TodayHabit } from '~/lib/habits';
 
 interface HabitOverviewProps {
@@ -20,41 +18,35 @@ export default function HabitOverview({
   todayHabits,
   weeklySummary,
 }: HabitOverviewProps) {
-  const completedToday = todayHabits.filter(
-    (item) => item.completed,
-  ).length;
-
-  const weeklyPercent = Math.round(
-    (weeklySummary?.completionRate ?? 0) * 100,
-  );
+  const completedToday = todayHabits.filter((item) => item.completed).length;
+  const weeklyPercent = Math.round((weeklySummary?.completionRate ?? 0) * 100);
 
   return (
-    <>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <article className="rounded-xl border border-[#e7e7e2] bg-white p-5">
-          <div className="flex items-center gap-2 text-sm text-[#72726f]">
-            <CalendarDays size={17} />
+    <div className="space-y-4">
+      {/* 3 Metric Cards */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[var(--text-3)]">
+            <Icon name="today" size={15} />
             Scheduled today
           </div>
-          <p className="mt-4 text-3xl font-semibold">
+          <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
             {isLoading ? '—' : todayHabits.length}
           </p>
-          <p className="mt-1 text-xs text-[#72726f]">
+          <p className="mt-1 text-[11px] text-[var(--text-3)]">
             Habits due today
           </p>
         </article>
 
-        <article className="rounded-xl border border-[#e7e7e2] bg-white p-5">
-          <div className="flex items-center gap-2 text-sm text-[#72726f]">
-            <Check size={17} />
+        <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[var(--text-3)]">
+            <Icon name="check" size={15} />
             Completed today
           </div>
-          <p className="mt-4 text-3xl font-semibold">
-            {isLoading
-              ? '—'
-              : `${completedToday}/${todayHabits.length}`}
+          <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
+            {isLoading ? '—' : `${completedToday}/${todayHabits.length}`}
           </p>
-          <p className="mt-1 text-xs text-[#72726f]">
+          <p className="mt-1 text-[11px] text-[var(--text-3)]">
             {todayHabits.length
               ? `${Math.round(
                   (completedToday / todayHabits.length) * 100,
@@ -63,15 +55,15 @@ export default function HabitOverview({
           </p>
         </article>
 
-        <article className="rounded-xl border border-[#e7e7e2] bg-white p-5">
-          <div className="flex items-center gap-2 text-sm text-[#72726f]">
-            <Target size={17} />
+        <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[var(--text-3)]">
+            <Icon name="focus" size={15} />
             This week
           </div>
-          <p className="mt-4 text-3xl font-semibold">
+          <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
             {isLoading ? '—' : `${weeklyPercent}%`}
           </p>
-          <p className="mt-1 text-xs text-[#72726f]">
+          <p className="mt-1 text-[11px] text-[var(--text-3)]">
             {weeklySummary
               ? `${weeklySummary.completedActions} of ${weeklySummary.scheduledActions} scheduled actions`
               : 'Weekly summary unavailable'}
@@ -79,23 +71,26 @@ export default function HabitOverview({
         </article>
       </div>
 
-      <section className="rounded-xl border border-[#e7e7e2] bg-white p-5 sm:p-6">
-        <div className="mb-6 flex items-center justify-between gap-3">
+      {/* Weekly Activity Bar Chart */}
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Weekly activity</h2>
-            <p className="mt-1 text-sm text-[#72726f]">
+            <h2 className="text-sm font-semibold tracking-tight text-[var(--text)]">
+              Weekly activity
+            </h2>
+            <p className="text-[11px] text-[var(--text-3)]">
               Your progress from Monday through Sunday.
             </p>
           </div>
-          <CalendarDays size={21} className="text-[#72726f]" />
+          <Icon name="today" size={18} className="text-[var(--text-3)]" />
         </div>
 
         {isLoading ? (
-          <p className="py-6 text-center text-sm text-[#72726f]">
-            Loading weekly activity...
+          <p className="py-6 text-center text-xs font-mono uppercase tracking-wider text-[var(--text-3)]">
+            Loading weekly activity…
           </p>
         ) : weeklySummary ? (
-          <div className="grid grid-cols-7 gap-2 sm:gap-4">
+          <div className="grid grid-cols-7 gap-2 sm:gap-3">
             {weeklySummary.days.map((day) => {
               const percentage =
                 day.scheduled > 0
@@ -104,7 +99,7 @@ export default function HabitOverview({
 
               const height =
                 day.scheduled > 0
-                  ? Math.max(10, Math.round((percentage / 100) * 48))
+                  ? Math.max(10, Math.round((percentage / 100) * 44))
                   : 4;
 
               return (
@@ -113,22 +108,22 @@ export default function HabitOverview({
                   title={`${day.completed} completed of ${day.scheduled} scheduled`}
                   className="flex min-w-0 flex-col items-center gap-2"
                 >
-                  <span className="text-xs text-[#72726f]">
+                  <span className="font-mono text-[10px] text-[var(--text-3)]">
                     {formatWeekday(day.date)}
                   </span>
-                  <div className="flex h-14 w-full items-end justify-center">
+                  <div className="flex h-12 w-full items-end justify-center">
                     <div
-                      className="w-full max-w-10 rounded-t-md bg-[#fa3600] transition-all"
+                      className="w-full max-w-8 rounded-t bg-[var(--accent)] transition-all"
                       style={{
                         height: `${height}px`,
                         opacity:
                           day.scheduled === 0
                             ? 0.18
-                            : 0.3 + percentage / 140,
+                            : 0.35 + percentage / 140,
                       }}
                     />
                   </div>
-                  <span className="text-xs font-medium">
+                  <span className="font-mono text-[10px] text-[var(--text-2)]">
                     {day.scheduled
                       ? `${day.completed}/${day.scheduled}`
                       : '—'}
@@ -138,11 +133,11 @@ export default function HabitOverview({
             })}
           </div>
         ) : (
-          <p className="text-sm text-[#72726f]">
+          <p className="text-xs text-[var(--text-3)]">
             Weekly activity is unavailable.
           </p>
         )}
       </section>
-    </>
+    </div>
   );
 }

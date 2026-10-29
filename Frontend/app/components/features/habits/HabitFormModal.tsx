@@ -1,7 +1,8 @@
-
 import { useEffect, useState, type FormEvent } from 'react';
-import { LoaderCircle, X } from 'lucide-react';
-
+import { Button } from '~/components/ui/Button';
+import { Icon } from '~/components/ui/Icon';
+import HabitSchedulePicker from './HabitSchedulePicker';
+import HabitReminderPicker from './HabitReminderPicker';
 import type {
   CreateHabitInput,
   Habit,
@@ -16,23 +17,7 @@ interface HabitFormModalProps {
 }
 
 const inputClass =
-  'mt-1 w-full rounded-lg border border-[#d8d8d3] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-[#fa3600] focus:ring-2 focus:ring-[#fa3600]/10';
-
-const primaryButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg bg-[#fa3600] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#d92f00] disabled:cursor-not-allowed disabled:opacity-50';
-
-const secondaryButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8d8d3] bg-white px-4 py-2.5 text-sm font-medium text-[#333] transition hover:bg-[#f6f6f3] disabled:opacity-50';
-
-const DAYS = [
-  { label: 'Sun', value: 0 },
-  { label: 'Mon', value: 1 },
-  { label: 'Tue', value: 2 },
-  { label: 'Wed', value: 3 },
-  { label: 'Thu', value: 4 },
-  { label: 'Fri', value: 5 },
-  { label: 'Sat', value: 6 },
-];
+  'mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text)] outline-none transition focus:border-[var(--accent)]';
 
 function localDateString(date: Date) {
   const year = date.getFullYear();
@@ -49,17 +34,12 @@ export default function HabitFormModal({
   onSave,
 }: HabitFormModalProps) {
   const [title, setTitle] = useState(habit?.title ?? '');
-  const [description, setDescription] = useState(
-    habit?.description ?? '',
-  );
-  const [tagsInput, setTagsInput] = useState(
-    habit?.tags.join(', ') ?? '',
-  );
+  const [description, setDescription] = useState(habit?.description ?? '');
+  const [tagsInput, setTagsInput] = useState(habit?.tags.join(', ') ?? '');
 
-  const [scheduleType, setScheduleType] =
-    useState<HabitScheduleType>(
-      habit?.schedule.type ?? 'daily',
-    );
+  const [scheduleType, setScheduleType] = useState<HabitScheduleType>(
+    habit?.schedule.type ?? 'daily',
+  );
 
   const [selectedDays, setSelectedDays] = useState<number[]>(
     habit?.schedule.daysOfWeek ?? [1, 2, 3, 4, 5],
@@ -68,9 +48,7 @@ export default function HabitFormModal({
   const [targetCount, setTargetCount] = useState(
     String(habit?.target.count ?? 1),
   );
-  const [targetUnit, setTargetUnit] = useState(
-    habit?.target.unit ?? 'times',
-  );
+  const [targetUnit, setTargetUnit] = useState(habit?.target.unit ?? 'times');
 
   const [startDate, setStartDate] = useState(
     habit?.startDate ?? localDateString(new Date()),
@@ -84,25 +62,18 @@ export default function HabitFormModal({
     habit?.reminder.time ?? '08:00',
   );
 
-  const [color, setColor] = useState(
-    habit?.color ?? '#fa3600',
-  );
+  const [color, setColor] = useState(habit?.color ?? '#fa3600');
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (isSaving) return;
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+      if (event.key === 'Escape') onClose();
     }
 
     window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSaving, onClose]);
 
   function toggleDay(day: number) {
@@ -179,53 +150,42 @@ export default function HabitFormModal({
       startDate,
       endDate: endDate || undefined,
       reminder: reminderEnabled
-        ? {
-            enabled: true,
-            time: reminderTime,
-          }
-        : {
-            enabled: false,
-          },
+        ? { enabled: true, time: reminderTime }
+        : { enabled: false },
       color,
     };
 
     const succeeded = await onSave(data);
-
     if (succeeded) onClose();
   }
 
   return (
     <div
-      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/40 p-4"
+      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
       onMouseDown={(event) => {
-        if (
-          event.target === event.currentTarget &&
-          !isSaving
-        ) {
-          onClose();
-        }
+        if (event.target === event.currentTarget && !isSaving) onClose();
       }}
     >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="habit-form-title"
-        className="my-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-[#e7e7e2] bg-white p-5 shadow-xl sm:p-7"
+        className="my-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl sm:p-7"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#72726f]">
+            <p className="text-[10px] font-mono font-semibold uppercase tracking-widest text-[var(--accent)]">
               {habit ? 'Edit practice' : 'New practice'}
             </p>
 
             <h2
               id="habit-form-title"
-              className="mt-2 text-2xl font-normal"
+              className="mt-1 text-xl font-medium tracking-tight text-[var(--text)]"
             >
               {habit ? 'Edit habit' : 'Create a habit'}
             </h2>
 
-            <p className="mt-2 text-sm text-[#72726f]">
+            <p className="mt-1 text-xs text-[var(--text-3)]">
               Define a routine you can realistically repeat.
             </p>
           </div>
@@ -235,24 +195,24 @@ export default function HabitFormModal({
             disabled={isSaving}
             onClick={onClose}
             aria-label="Close habit dialog"
-            className="rounded-lg p-2 text-[#72726f] hover:bg-[#f4f4f1] disabled:opacity-50"
+            className="rounded-lg p-1.5 text-[var(--text-3)] hover:bg-[var(--canvas-2)] hover:text-[var(--text)] disabled:opacity-50"
           >
-            <X size={19} />
+            <Icon name="close" size={18} />
           </button>
         </div>
 
         {formError && (
           <p
             role="alert"
-            className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+            className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-600"
           >
             {formError}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div>
-            <label htmlFor="habit-title" className="text-sm font-medium">
+            <label htmlFor="habit-title" className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]">
               Habit name *
             </label>
             <input
@@ -270,7 +230,7 @@ export default function HabitFormModal({
           <div>
             <label
               htmlFor="habit-description"
-              className="text-sm font-medium"
+              className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]"
             >
               Description
             </label>
@@ -286,7 +246,7 @@ export default function HabitFormModal({
           </div>
 
           <div>
-            <label htmlFor="habit-tags" className="text-sm font-medium">
+            <label htmlFor="habit-tags" className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]">
               Tags
             </label>
             <input
@@ -296,68 +256,24 @@ export default function HabitFormModal({
               placeholder="health, learning, focus"
               className={inputClass}
             />
-            <p className="mt-1 text-xs text-[#858580]">
+            <p className="mt-1 text-[11px] text-[var(--text-3)]">
               Separate tags with commas, up to 10 tags.
             </p>
           </div>
 
-          <div>
-            <label
-              htmlFor="habit-schedule"
-              className="text-sm font-medium"
-            >
-              Schedule
-            </label>
-            <select
-              id="habit-schedule"
-              value={scheduleType}
-              onChange={(event) =>
-                setScheduleType(
-                  event.target.value as HabitScheduleType,
-                )
-              }
-              className={inputClass}
-            >
-              <option value="daily">Every day</option>
-              <option value="weekdays">Monday to Friday</option>
-              <option value="custom">Choose specific days</option>
-            </select>
-          </div>
-
-          {scheduleType === 'custom' && (
-            <fieldset>
-              <legend className="text-sm font-medium">
-                Repeat on *
-              </legend>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {DAYS.map((day) => {
-                  const selected = selectedDays.includes(day.value);
-
-                  return (
-                    <button
-                      key={day.value}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => toggleDay(day.value)}
-                      className={`rounded-lg border px-3 py-2 text-xs transition ${
-                        selected
-                          ? 'border-[#fa3600] bg-[#fff0eb] text-[#c32c00]'
-                          : 'border-[#d8d8d3] bg-white text-[#626260] hover:bg-[#f6f6f3]'
-                      }`}
-                    >
-                      {day.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          )}
+          <HabitSchedulePicker
+            scheduleType={scheduleType}
+            onScheduleTypeChange={setScheduleType}
+            selectedDays={selectedDays}
+            onToggleDay={toggleDay}
+            inputClass={inputClass}
+          />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="habit-target-count"
-                className="text-sm font-medium"
+                className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]"
               >
                 Daily target *
               </label>
@@ -377,7 +293,7 @@ export default function HabitFormModal({
             <div>
               <label
                 htmlFor="habit-target-unit"
-                className="text-sm font-medium"
+                className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]"
               >
                 Target unit
               </label>
@@ -396,7 +312,7 @@ export default function HabitFormModal({
             <div>
               <label
                 htmlFor="habit-start-date"
-                className="text-sm font-medium"
+                className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]"
               >
                 Start date *
               </label>
@@ -413,7 +329,7 @@ export default function HabitFormModal({
             <div>
               <label
                 htmlFor="habit-end-date"
-                className="text-sm font-medium"
+                className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]"
               >
                 End date
               </label>
@@ -425,95 +341,58 @@ export default function HabitFormModal({
                 onChange={(event) => setEndDate(event.target.value)}
                 className={inputClass}
               />
-              <p className="mt-1 text-xs text-[#858580]">
+              <p className="mt-1 text-[11px] text-[var(--text-3)]">
                 Leave blank for no end date.
               </p>
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <label
                 htmlFor="habit-color"
-                className="text-sm font-medium"
+                className="text-xs font-mono uppercase tracking-wider text-[var(--text-2)]"
               >
                 Accent color
               </label>
-              <input
-                id="habit-color"
-                type="color"
-                value={color}
-                onChange={(event) => setColor(event.target.value)}
-                className="mt-1 h-[42px] w-full cursor-pointer rounded-lg border border-[#d8d8d3] bg-white p-1"
-              />
+              <div className="mt-1 flex items-center gap-3">
+                <input
+                  id="habit-color"
+                  type="color"
+                  value={color}
+                  onChange={(event) => setColor(event.target.value)}
+                  className="h-9 w-14 cursor-pointer rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1"
+                />
+                <span className="font-mono text-xs uppercase text-[var(--text-3)]">
+                  {color}
+                </span>
+              </div>
             </div>
           </div>
 
-          <section className="rounded-lg border border-[#e7e7e2] p-4">
-            <label className="flex cursor-pointer items-center gap-3">
-              <input
-                type="checkbox"
-                checked={reminderEnabled}
-                onChange={(event) =>
-                  setReminderEnabled(event.target.checked)
-                }
-                className="h-4 w-4 accent-[#fa3600]"
-              />
+          <HabitReminderPicker
+            reminderEnabled={reminderEnabled}
+            onReminderEnabledChange={setReminderEnabled}
+            reminderTime={reminderTime}
+            onReminderTimeChange={setReminderTime}
+            inputClass={inputClass}
+          />
 
-              <span>
-                <span className="block text-sm font-medium">
-                  Enable reminder
-                </span>
-                <span className="mt-1 block text-xs text-[#72726f]">
-                  Save a preferred reminder time for this habit.
-                </span>
-              </span>
-            </label>
-
-            {reminderEnabled && (
-              <div className="mt-4">
-                <label
-                  htmlFor="habit-reminder-time"
-                  className="text-sm font-medium"
-                >
-                  Reminder time *
-                </label>
-                <input
-                  id="habit-reminder-time"
-                  type="time"
-                  required
-                  value={reminderTime}
-                  onChange={(event) =>
-                    setReminderTime(event.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-            )}
-          </section>
-
-          <div className="flex flex-col-reverse gap-2 border-t border-[#ededE8] pt-5 sm:flex-row sm:justify-end">
-            <button
+          <div className="flex flex-col-reverse gap-2 border-t border-[var(--border-subtle)] pt-4 sm:flex-row sm:justify-end">
+            <Button
+              variant="secondary"
               type="button"
               disabled={isSaving}
               onClick={onClose}
-              className={secondaryButtonClass}
             >
               Cancel
-            </button>
+            </Button>
 
-            <button
+            <Button
+              variant="primary"
               type="submit"
               disabled={isSaving}
-              className={primaryButtonClass}
             >
-              {isSaving && (
-                <LoaderCircle size={16} className="animate-spin" />
-              )}
-              {isSaving
-                ? 'Saving...'
-                : habit
-                  ? 'Save changes'
-                  : 'Create habit'}
-            </button>
+              {isSaving ? 'Saving…' : habit ? 'Save changes' : 'Create habit'}
+            </Button>
           </div>
         </form>
       </section>

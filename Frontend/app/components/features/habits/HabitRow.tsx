@@ -1,17 +1,4 @@
-
-import {
-  Archive,
-  Check,
-  Flame,
-  History,
-  LoaderCircle,
-  Minus,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Trash2,
-} from 'lucide-react';
-
+import { Icon } from '~/components/ui/Icon';
 import type { Habit, TodayHabit } from '~/lib/habits';
 import type { ProgressChange } from '~/hooks/useHabits';
 
@@ -29,15 +16,6 @@ interface HabitRowProps {
     action: 'archive' | 'restore' | 'delete',
   ) => void;
 }
-
-const primaryButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg bg-[#fa3600] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#d92f00] disabled:cursor-not-allowed disabled:opacity-50';
-
-const secondaryButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8d8d3] bg-white px-3 py-2.5 text-sm font-medium text-[#333] transition hover:bg-[#f6f6f3] disabled:cursor-not-allowed disabled:opacity-50';
-
-const dangerButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -81,10 +59,7 @@ export default function HabitRow({
       delete: `Permanently delete "${habit.title}" and its progress history? This cannot be undone.`,
     };
 
-    if (
-      action !== 'restore' &&
-      !window.confirm(messages[action])
-    ) {
+    if (action !== 'restore' && !window.confirm(messages[action])) {
       return;
     }
 
@@ -92,7 +67,7 @@ export default function HabitRow({
   }
 
   return (
-    <article className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <article className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 transition-colors hover:bg-[var(--canvas-2)]">
       <div className="flex min-w-0 items-start gap-3">
         <div
           className="mt-1 h-10 w-1.5 shrink-0 rounded-full"
@@ -101,41 +76,42 @@ export default function HabitRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words font-semibold">{habit.title}</h3>
+            <h3 className="break-words font-semibold text-[var(--text)]">
+              {habit.title}
+            </h3>
 
             {isCompleted && (
-              <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-green-700">
+              <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wider text-[var(--accent-text)]">
                 Completed
               </span>
             )}
           </div>
 
           {habit.description && (
-            <p className="mt-1 break-words text-sm text-[#72726f]">
+            <p className="mt-1 break-words text-xs text-[var(--text-3)]">
               {habit.description}
             </p>
           )}
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#72726f]">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-[var(--text-3)]">
             <span>{getScheduleLabel(habit)}</span>
             <span>
               Target: {habit.target.count} {habit.target.unit}
             </span>
 
             {habit.currentStreak > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Flame size={13} />
-                {habit.currentStreak}-day streak
+              <span className="inline-flex items-center gap-1 text-[var(--accent)] font-medium">
+                ★ {habit.currentStreak}-day streak
               </span>
             )}
           </div>
 
           {habit.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap gap-1">
               {habit.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-md bg-[#f4f4f1] px-2 py-1 text-[11px] text-[#626260]"
+                  className="rounded border border-[var(--border-subtle)] bg-[var(--surface)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--text-3)]"
                 >
                   #{tag}
                 </span>
@@ -145,16 +121,16 @@ export default function HabitRow({
 
           {isDueToday && todayRecord && (
             <div className="mt-3 max-w-sm">
-              <div className="mb-1.5 flex justify-between text-xs text-[#72726f]">
+              <div className="mb-1.5 flex justify-between font-mono text-[10px] text-[var(--text-3)]">
                 <span>Today's progress</span>
                 <span>
                   {todayRecord.value}/{todayRecord.target}
                 </span>
               </div>
 
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#ededE8]">
+              <div className="h-1.5 overflow-hidden rounded-full bg-[var(--border-subtle)]">
                 <div
-                  className="h-full rounded-full bg-[#fa3600] transition-all"
+                  className="h-full rounded-full bg-[var(--accent)] transition-all"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -162,7 +138,7 @@ export default function HabitRow({
           )}
 
           {!showArchived && !isDueToday && (
-            <p className="mt-2 text-xs text-[#858580]">
+            <p className="mt-2 text-[11px] font-mono text-[var(--text-3)]">
               Not scheduled today
             </p>
           )}
@@ -174,9 +150,9 @@ export default function HabitRow({
           type="button"
           disabled={isUpdating}
           onClick={() => onViewHistory(habit)}
-          className={secondaryButtonClass}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-2)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] disabled:opacity-50"
         >
-          <History size={15} />
+          <Icon name="timeline" size={14} />
           History
         </button>
 
@@ -186,13 +162,9 @@ export default function HabitRow({
               type="button"
               disabled={isUpdating}
               onClick={() => handleManage('restore')}
-              className={secondaryButtonClass}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-2)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] disabled:opacity-50"
             >
-              {isUpdating ? (
-                <LoaderCircle size={15} className="animate-spin" />
-              ) : (
-                <RotateCcw size={15} />
-              )}
+              <Icon name="undo" size={14} />
               Restore
             </button>
 
@@ -200,13 +172,9 @@ export default function HabitRow({
               type="button"
               disabled={isUpdating}
               onClick={() => handleManage('delete')}
-              className={dangerButtonClass}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
             >
-              {isUpdating ? (
-                <LoaderCircle size={15} className="animate-spin" />
-              ) : (
-                <Trash2 size={15} />
-              )}
+              <Icon name="close" size={14} />
               Delete
             </button>
           </>
@@ -216,9 +184,9 @@ export default function HabitRow({
               type="button"
               disabled={isUpdating}
               onClick={() => onEdit(habit)}
-              className={secondaryButtonClass}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-2)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] disabled:opacity-50"
             >
-              <Pencil size={15} />
+              <Icon name="edit" size={14} />
               Edit
             </button>
 
@@ -226,55 +194,37 @@ export default function HabitRow({
               type="button"
               disabled={isUpdating}
               onClick={() => handleManage('archive')}
-              className={secondaryButtonClass}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-2)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] disabled:opacity-50"
             >
-              {isUpdating ? (
-                <LoaderCircle size={15} className="animate-spin" />
-              ) : (
-                <Archive size={15} />
-              )}
+              <Icon name="archive" size={14} />
               Archive
             </button>
 
             {isDueToday && todayRecord ? (
               todayRecord.target > 1 ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     aria-label={`Decrease ${habit.title} progress`}
                     disabled={isUpdating || todayRecord.value <= 0}
-                    onClick={() =>
-                      onAdjustProgress(todayRecord, -1)
-                    }
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#d8d8d3] bg-white hover:bg-[#f6f6f3] disabled:cursor-not-allowed disabled:opacity-40"
+                    onClick={() => onAdjustProgress(todayRecord, -1)}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] font-mono text-sm text-[var(--text-2)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] disabled:opacity-40"
                   >
-                    {isUpdating ? (
-                      <LoaderCircle size={16} className="animate-spin" />
-                    ) : (
-                      <Minus size={16} />
-                    )}
+                    -
                   </button>
 
                   <button
                     type="button"
                     aria-label={`Add one ${habit.target.unit} to ${habit.title}`}
                     disabled={isUpdating || todayRecord.completed}
-                    onClick={() =>
-                      onAdjustProgress(todayRecord, 1)
-                    }
-                    className={
+                    onClick={() => onAdjustProgress(todayRecord, 1)}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors ${
                       todayRecord.completed
-                        ? secondaryButtonClass
-                        : primaryButtonClass
-                    }
+                        ? 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-3)]'
+                        : 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
+                    }`}
                   >
-                    {isUpdating ? (
-                      <LoaderCircle size={16} className="animate-spin" />
-                    ) : todayRecord.completed ? (
-                      <Check size={16} />
-                    ) : (
-                      <Plus size={16} />
-                    )}
+                    <Icon name={todayRecord.completed ? 'check' : 'plus'} size={14} />
                     {todayRecord.completed ? 'Goal reached' : '+1'}
                   </button>
                 </div>
@@ -283,22 +233,18 @@ export default function HabitRow({
                   type="button"
                   disabled={isUpdating}
                   onClick={() => onProgress(todayRecord)}
-                  className={
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors ${
                     isCompleted
-                      ? secondaryButtonClass
-                      : primaryButtonClass
-                  }
+                      ? 'border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:border-[var(--border-strong)]'
+                      : 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
+                  }`}
                 >
-                  {isUpdating ? (
-                    <LoaderCircle size={16} className="animate-spin" />
-                  ) : (
-                    <Check size={16} />
-                  )}
-                  {isCompleted ? 'Undo completion' : 'Mark complete'}
+                  <Icon name={isCompleted ? 'undo' : 'check'} size={14} />
+                  {isCompleted ? 'Undo' : 'Mark complete'}
                 </button>
               )
             ) : (
-              <span className="inline-flex rounded-lg bg-[#f4f4f1] px-3 py-2.5 text-xs text-[#72726f]">
+              <span className="inline-flex rounded-lg border border-[var(--border-subtle)] bg-[var(--canvas-2)] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-[var(--text-3)]">
                 Rest day
               </span>
             )}

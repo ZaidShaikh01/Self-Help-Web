@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { logoutRequest } from '~/lib/auth';
 import { ApiRequestError } from '~/lib/api';
-import { Bell, Moon, Plus, Search, Sun, LogOut } from 'lucide-react';
+import { Icon } from '~/components/ui/Icon';
+import { IconButton } from '~/components/ui/Button';
 
-interface HeaderProps {
+export interface HeaderProps {
   section?: string;
   scope?: string;
   hasUnread?: boolean;
-  user?: { initial?: string };
+  user?: { initial?: string; name?: string };
   onSearch?: () => void;
   onCreate?: () => void;
   onNotifications?: () => void;
@@ -16,9 +17,19 @@ interface HeaderProps {
   dark?: boolean;
 }
 
-const Header = ({
-  section = 'Library',
-  scope = 'LOC',
+function resolveSection(pathname: string): string {
+  if (pathname.startsWith('/habits')) return 'HABITS';
+  if (pathname.startsWith('/library')) return 'LIBRARY';
+  if (pathname.startsWith('/journal')) return 'JOURNAL';
+  if (pathname.startsWith('/timeline')) return 'TIMELINE';
+  if (pathname.startsWith('/insights')) return 'INSIGHTS';
+  if (pathname.startsWith('/settings')) return 'SETTINGS';
+  return 'TODAY';
+}
+
+export default function Header({
+  section,
+  scope = 'GROWTH OS',
   hasUnread = true,
   user = { initial: 'A' },
   onSearch = () => {},
@@ -26,12 +37,15 @@ const Header = ({
   onNotifications = () => {},
   onToggleTheme = () => {},
   dark = false,
-}: HeaderProps) => {
+}: HeaderProps) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // ⌘K / Ctrl+K opens search
+  const resolvedSection = section ?? resolveSection(pathname);
+
+  // ⌘K / Ctrl+K keyboard shortcut opens search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -43,14 +57,15 @@ const Header = ({
     return () => window.removeEventListener('keydown', handler);
   }, [onSearch]);
 
-  // Close the mobile menu on outside click / Escape
+  // Close mobile dropdown menu on outside click or Escape
   useEffect(() => {
     if (!menuOpen) return;
     const onDown = (e: MouseEvent) => {
       if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
     };
-    const onKey = (e: KeyboardEvent) =>
-      e.key === 'Escape' && setMenuOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
     return () => {
@@ -74,131 +89,133 @@ const Header = ({
     }
   };
 
-  const iconBtn =
-    'relative grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:border-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ff3d00] cursor-pointer transition-colors sm:h-10 sm:w-10';
-
-  const menuItem =
-    'flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left text-[12px] uppercase tracking-wide text-neutral-700 hover:bg-neutral-100';
-
   return (
-    <header className='sticky top-0 z-30 flex h-[68px] w-full shrink-0 items-center justify-between gap-3 border-b border-neutral-300 bg-[#ececec] px-3 font-mono sm:h-[75px] sm:px-6 lg:px-8'>
-      {/* Breadcrumb: takes the leftover space and truncates */}
-      <nav
-        aria-label='Breadcrumb'
-        className='flex min-w-0 flex-1 items-center gap-1.5 text-[12px] tracking-wide sm:gap-2 sm:text-[13px]'
-      >
-        <span className='shrink-0 font-bold text-[#ff3d00]'>{scope}</span>
-        <span className='shrink-0 text-[#ff3d00]'>/</span>
-        <span className='truncate font-medium text-neutral-700'>{section}</span>
+    <header className="utility-bar font-mono text-[11px] text-[var(--text)]">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2">
+        <span className="font-semibold text-[var(--accent)]">{scope}</span>
+        <span className="text-[var(--border)]">/</span>
+        <span className="truncate font-medium text-[var(--text)]">{resolvedSection}</span>
       </nav>
 
-      {/* Actions */}
-      <div className='flex shrink-0 items-center gap-2 sm:gap-3'>
-        {/* Search: full bar from lg, icon below */}
+      {/* Actions Toolbar */}
+      <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+        {/* Search trigger (desktop button / mobile icon) */}
         <button
+          type="button"
           onClick={onSearch}
-          aria-label='Search'
-          className='hidden h-10 w-48 items-center gap-2.5 rounded-lg border border-neutral-300 bg-white px-3 text-[12px] uppercase tracking-wide text-neutral-500 transition-colors hover:border-neutral-500 cursor-pointer lg:flex xl:w-[262px]'
+          aria-label="Search (⌘K)"
+          className="hidden h-9 w-44 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[10px] uppercase tracking-wider text-[var(--text-3)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:flex xl:w-56"
         >
-          <Search size={16} className='shrink-0' />
-          <span className='flex-1 truncate text-left'>Search anything</span>
-          <kbd className='hidden rounded border border-neutral-400 px-1.5 py-0.5 text-[9px] text-neutral-500 xl:inline-block'>
-            ⌘K
-          </kbd>
-        </button>
-        <button
-          onClick={onSearch}
-          aria-label='Search'
-          className={`lg:hidden ${iconBtn}`}
-        >
-          <Search size={18} />
+          <Icon name="search" size={15} />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="text-[9px]">⌘K</kbd>
         </button>
 
-        {/* Create: from md up (lives in the menu below md) */}
         <button
-          aria-label='Create new'
+          type="button"
+          onClick={onSearch}
+          aria-label="Search (⌘K)"
+          className="icon-button lg:hidden"
+        >
+          <Icon name="search" size={17} />
+        </button>
+
+        {/* Create / Quick Capture */}
+        <button
+          type="button"
           onClick={onCreate}
-          className={`hidden md:grid ${iconBtn}`}
+          aria-label="Create new"
+          className="icon-button hidden sm:inline-grid"
         >
-          <Plus size={18} />
+          <Icon name="plus" size={17} />
         </button>
 
-        {/* Notifications: always visible */}
+        {/* Notifications */}
         <button
-          aria-label='Notifications'
+          type="button"
           onClick={onNotifications}
-          className={iconBtn}
+          aria-label="Notifications"
+          className="icon-button relative"
         >
-          <Bell size={18} />
+          <Icon name="bell" size={17} />
           {hasUnread && (
-            <span className='absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#ff3d00]' />
+            <span
+              className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--accent)]"
+              aria-hidden="true"
+            />
           )}
         </button>
 
-        {/* Theme: icon from md, label from xl */}
+        {/* Theme Toggle (preserved) */}
         <button
+          type="button"
           onClick={onToggleTheme}
-          aria-label='Toggle theme'
-          className='hidden h-10 w-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-white text-[12px] uppercase tracking-wide text-neutral-700 transition-colors hover:border-neutral-500 md:flex xl:w-auto xl:px-3.5'
+          aria-label={`Switch theme (currently ${dark ? 'dark' : 'light'})`}
+          className="icon-button hidden sm:inline-grid"
         >
-          {dark ? <Sun size={16} /> : <Moon size={16} />}
-          <span className='hidden xl:inline'>{dark ? 'Light' : 'Dark'}</span>
+          <Icon name={dark ? 'sun' : 'moon'} size={17} />
         </button>
 
-        {/* Logout: icon from md, label from xl */}
+        {/* Logout (desktop) */}
         <button
+          type="button"
           onClick={handleLogout}
-          aria-label='Logout'
-          className='hidden cursor-pointer items-center gap-1.5 px-1.5 text-sm font-semibold text-neutral-600 transition-colors hover:text-neutral-900 md:flex'
+          aria-label="Sign out"
+          className="hidden cursor-pointer items-center gap-1.5 rounded-lg border border-transparent px-2.5 py-1.5 text-[10px] font-medium uppercase tracking-wider text-[var(--text-2)] transition-colors hover:border-[var(--border-subtle)] hover:bg-[var(--surface)] hover:text-[var(--text)] md:flex"
         >
-          <LogOut size={16} />
-          <span className='hidden xl:inline'>Logout</span>
+          <Icon name="arrow" size={14} />
+          <span>Sign out</span>
         </button>
 
-        {/* Avatar; below md it opens a menu holding Create / Theme / Logout */}
-        <div ref={menuRef} className='relative'>
+        {/* User Avatar & Dropdown Menu */}
+        <div ref={menuRef} className="relative">
           <button
-            aria-label='Account'
-            aria-haspopup='menu'
+            type="button"
+            aria-label="Account menu"
+            aria-haspopup="menu"
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((o) => !o)}
-            className='grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full bg-neutral-900 font-sans text-xs font-semibold text-white sm:h-10 sm:w-10 sm:text-sm'
+            onClick={() => setMenuOpen((open) => !open)}
+            className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-[var(--granite-strong)] font-sans text-xs font-semibold text-[var(--surface)] transition-transform hover:scale-105"
           >
             {user.initial}
           </button>
 
           {menuOpen && (
             <div
-              role='menu'
-              className='absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-xl md:hidden'
+              role="menu"
+              className="absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
             >
               <button
-                role='menuitem'
-                className={menuItem}
+                type="button"
+                role="menuitem"
+                className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--text)] hover:bg-[var(--canvas-2)]"
                 onClick={() => {
                   setMenuOpen(false);
                   onCreate();
                 }}
               >
-                <Plus size={16} /> Create new
+                <Icon name="plus" size={15} /> Create new
               </button>
               <button
-                role='menuitem'
-                className={menuItem}
+                type="button"
+                role="menuitem"
+                className="flex w-full cursor-pointer items-center gap-2.5 px-3.5 py-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--text)] hover:bg-[var(--canvas-2)]"
                 onClick={() => {
                   setMenuOpen(false);
                   onToggleTheme();
                 }}
               >
-                {dark ? <Sun size={16} /> : <Moon size={16} />}
+                <Icon name={dark ? 'sun' : 'moon'} size={15} />
                 {dark ? 'Light mode' : 'Dark mode'}
               </button>
               <button
-                role='menuitem'
-                className={`${menuItem} border-t border-neutral-200`}
+                type="button"
+                role="menuitem"
+                className="flex w-full cursor-pointer items-center gap-2.5 border-t border-[var(--border-subtle)] px-3.5 py-2.5 text-left text-[11px] uppercase tracking-wide text-red-600 hover:bg-red-50"
                 onClick={handleLogout}
               >
-                <LogOut size={16} /> Logout
+                <Icon name="arrow" size={15} /> Sign out
               </button>
             </div>
           )}
@@ -206,6 +223,4 @@ const Header = ({
       </div>
     </header>
   );
-};
-
-export default Header;
+}
