@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
+export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
 export class ApiRequestError extends Error {
   status: number;
@@ -57,6 +57,26 @@ export async function api<T = any>(
         options.body !== undefined
           ? JSON.stringify(options.body)
           : undefined,
+    });
+
+  let res = await doFetch();
+  if (res.status === 401 && !NO_REFRESH.some((p) => path.startsWith(p))) {
+    if (await refreshSession()) res = await doFetch();
+  }
+  return parse(res);
+}
+
+export async function apiUpload<T = any>(
+  path: string,
+  formData: FormData,
+  options: { method?: string } = {},
+): Promise<T> {
+  const doFetch = () =>
+    fetch(`${BASE_URL}${path}`, {
+      method: options.method ?? 'POST',
+      credentials: 'include',
+      cache: 'no-store',
+      body: formData,
     });
 
   let res = await doFetch();

@@ -51,3 +51,15 @@ export const resourceQuerySchema = paginationQuerySchema.extend({
   category: z.enum(CATEGORIES).optional(),
   q: z.string().trim().max(100).optional(), // search in title and author
 });
+
+export const updateEpubProgressSchema = z.object({
+  cfi: z
+    .string({ error: 'CFI is required' })
+    .trim()
+    .min(1, 'CFI is required')
+    .max(500, 'CFI cannot exceed 500 characters'),
+  percentage: z
+    .number({ error: 'Percentage is required' })
+    .min(0, 'Percentage must be at least 0')
+    .max(100, 'Percentage cannot exceed 100'),
+});

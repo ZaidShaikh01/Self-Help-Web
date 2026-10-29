@@ -34,10 +34,34 @@ const resourceSchema = new Schema(
     pages: { type: Number, min: 1 },
     currentPage: { type: Number, min: 0, default: 0 },
     summary: { type: String, trim: true, maxlength: 1000 },
+    attachment: {
+      key: { type: String, trim: true },
+      fileName: { type: String, trim: true },
+      mimeType: { type: String, trim: true },
+      size: { type: Number, min: 0 },
+      uploadedAt: { type: Date },
+      epubProgress: {
+        cfi: { type: String, trim: true, maxlength: 500 },
+        percentage: { type: Number, min: 0, max: 100 },
+        updatedAt: { type: Date },
+      },
+    },
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true }, // puts "progress" into API responses
+    toJSON: {
+      virtuals: true, // puts "progress" into API responses
+      transform: (_doc, ret) => {
+        if (ret.attachment) {
+          delete ret.attachment.key;
+          // If attachment has no fileName, omit attachment object entirely
+          if (!ret.attachment.fileName) {
+            delete ret.attachment;
+          }
+        }
+        return ret;
+      },
+    },
     id: false, // we already send _id; skip the duplicate "id"
   },
 );

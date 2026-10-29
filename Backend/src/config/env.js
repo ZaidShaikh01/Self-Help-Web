@@ -25,6 +25,21 @@ const schema = z
     R2_BUCKET_NAME: z.string().optional(),
     R2_ACCESS_KEY_ID: z.string().optional(),
     R2_SECRET_ACCESS_KEY: z.string().optional(),
+
+    // S3-compatible Object Storage (e.g. RustFS, MinIO, AWS S3)
+    OBJECT_STORAGE_ENDPOINT: z.string().optional(),
+    OBJECT_STORAGE_REGION: z.string().optional().default('us-east-1'),
+    OBJECT_STORAGE_BUCKET: z.string().optional(),
+    OBJECT_STORAGE_ACCESS_KEY_ID: z.string().optional(),
+    OBJECT_STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
+    OBJECT_STORAGE_FORCE_PATH_STYLE: z
+      .union([z.boolean(), z.string()])
+      .optional()
+      .transform((val) => val === true || val === 'true' || val === '1'),
+    OBJECT_STORAGE_MAX_FILE_BYTES: z.coerce
+      .number()
+      .optional()
+      .default(50 * 1024 * 1024),
     VAPID_PUBLIC_KEY: z.string().min(1).optional(),
     VAPID_PRIVATE_KEY: z.string().min(1).optional(),
     VAPID_SUBJECT: z.string().min(1).optional(),
