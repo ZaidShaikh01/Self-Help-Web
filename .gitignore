@@ -11,3 +11,6 @@ coverage/
 dist/
 build/
 .react-router/
+.prettierrc
+.postman/
+.vscode/
