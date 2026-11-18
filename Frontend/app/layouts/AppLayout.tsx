@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { getCurrentUser } from '~/lib/auth';
 import { ApiRequestError } from '~/lib/api';
@@ -19,6 +19,15 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isDark, toggleTheme } = useTheme();
+  const isToday = pathname === '/dashboard';
+  const openSearch = useCallback(
+    () => navigate('/library', { state: { focusSearch: true } }),
+    [navigate],
+  );
+  const openQuickCapture = useCallback(
+    () => navigate('/habits', { state: { openQuickCapture: true } }),
+    [navigate],
+  );
 
   const [authCheck, setAuthCheck] = useState<AuthCheck>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -110,26 +119,47 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="app-root flex h-screen overflow-hidden bg-[var(--canvas)] text-[var(--text)]">
-      {/* Collapsible Desktop Sidebar */}
-      <Sidebar />
+    <div
+      className={`app-root flex h-screen overflow-hidden bg-[var(--canvas)] text-[var(--text)] ${
+        isToday ? 'app-root--today' : ''
+      }`}
+    >
+      <Sidebar onSearch={openSearch} onQuickCapture={openQuickCapture} />
 
       {/* Main Content Stage */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--canvas)]">
+      <div
+        className={`flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--canvas)] ${
+          isToday ? 'today-app-stage' : ''
+        }`}
+      >
         {/* Top Utility Bar */}
-        <Header onToggleTheme={toggleTheme} dark={isDark} />
+        <Header
+          onSearch={openSearch}
+          onCreate={openQuickCapture}
+          onToggleTheme={toggleTheme}
+          dark={isDark}
+          dashboardMode={isToday}
+          scope={isToday ? 'LOC' : undefined}
+          section={isToday ? 'Today' : undefined}
+        />
         <ScrollProgress />
 
         {/* Scrollable Main Area */}
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 pb-20 md:pb-8">
+          <div
+            className={
+              isToday
+                ? 'today-route-shell'
+                : 'mx-auto w-full max-w-6xl px-4 py-6 pb-20 sm:px-6 md:pb-8'
+            }
+          >
             <Outlet />
           </div>
         </main>
       </div>
 
       {/* Mobile Navigation Bar (< 768px) */}
-      <MobileNav />
+      <MobileNav onSearch={openSearch} />
     </div>
   );
 }

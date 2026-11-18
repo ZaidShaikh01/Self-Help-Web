@@ -1,14 +1,21 @@
 import { Link } from 'react-router';
+import ActivityHeatmap from './ActivityHeatmap';
 
 interface LandingFeaturesProps {
   selectedView: number;
   onSelectView: (index: number) => void;
+  selectedDay: string;
+  onSelectDay: (day: string) => void;
 }
 
 const WORKFLOW = [
   ['01', 'Capture', 'Complete a habit, write a thought, or save a resource.'],
-  ['02', 'Connect', 'Keep sources and related records attached.'],
-  ['03', 'Understand', 'Review recorded patterns in Timeline and Insights.'],
+  [
+    '02',
+    'Connect',
+    'Growth OS keeps sources and related objects attached.',
+  ],
+  ['03', 'Understand', 'Timeline and Insights describe recorded patterns.'],
   ['04', 'Return', 'Revisit what changed and what still matters.'],
 ] as const;
 
@@ -28,13 +35,11 @@ const HISTORY_EVENTS = [
   ['20:04', 'Reflection adds context', 'Atomic Habits · What stayed with me'],
 ] as const;
 
-const EVIDENCE_ACTIVE_CELLS = [
-  2, 3, 7, 11, 12, 18, 19, 24, 28, 29, 35, 42, 43, 49, 56, 61, 66,
-];
-
 export default function LandingFeatures({
   selectedView,
   onSelectView,
+  selectedDay,
+  onSelectDay,
 }: LandingFeaturesProps) {
   return (
     <>
@@ -94,10 +99,10 @@ export default function LandingFeatures({
             <div className="product-preview__top">
               <span className="product-preview__status" />
               Growth OS / {PRODUCT_VIEWS[selectedView][0]}
-              <b>PRODUCT VIEW</b>
+              <b>LIVE PREVIEW</b>
             </div>
 
-            <div className="product-preview__canvas">
+            <div className="product-preview__canvas" key={selectedView}>
               <span className="eyebrow">
                 {selectedView === 4
                   ? 'YOUR PERSONAL HISTORY'
@@ -157,28 +162,20 @@ export default function LandingFeatures({
         </header>
 
         <div className="evidence-preview">
-          <div className="evidence-activity">
-            <span className="eyebrow">ACTIVITY / SAMPLE VIEW</span>
-            <div className="activity-grid" aria-hidden="true">
-              {Array.from({ length: 70 }, (_, index) => (
-                <i
-                  key={index}
-                  className={
-                    EVIDENCE_ACTIVE_CELLS.includes(index) ? 'has-data' : ''
-                  }
-                />
-              ))}
-            </div>
-            <small>Illustrative layout, not your actual activity data.</small>
-          </div>
+          <ActivityHeatmap
+            variant="evidence"
+            selectedDay={selectedDay}
+            onSelectDay={onSelectDay}
+          />
 
           <div className="evidence-statement">
             <span>OBS / 01</span>
             <strong>
-              Your progress should explain what happened, not judge you for
-              it.
+              You completed Reading on 4 of the last 7 scheduled days.
             </strong>
-            <small>Patterns should remain connected to their source records.</small>
+            <small>
+              PERIOD: OCT 19–25, 2026 · SOURCE: READING RECORDS
+            </small>
           </div>
         </div>
       </section>

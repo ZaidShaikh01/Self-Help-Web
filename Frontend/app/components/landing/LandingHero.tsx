@@ -1,14 +1,21 @@
 import { Link } from 'react-router';
+import ActivityHeatmap from './ActivityHeatmap';
 
 interface LandingHeroProps {
   onScrollTo: (id: string) => void;
+  selectedDay: string;
+  onSelectDay: (day: string) => void;
 }
 
-const ACTIVE_CELLS = [1, 3, 4, 8, 9, 14, 15, 18, 21, 22, 27, 29, 32];
-
-export default function LandingHero({ onScrollTo }: LandingHeroProps) {
+export default function LandingHero({
+  onScrollTo,
+  selectedDay,
+  onSelectDay,
+}: LandingHeroProps) {
   return (
     <section className="landing-hero" id="home">
+      <span className="landing-hero__index">LANDING / 00 / 2026.10</span>
+
       <div className="landing-hero__copy">
         <span className="eyebrow">A personal growth workspace</span>
 
@@ -44,10 +51,10 @@ export default function LandingHero({ onScrollTo }: LandingHeroProps) {
 
       <div
         className="landing-map"
-        aria-label="Illustration of connected personal history"
+        aria-label="Example connected personal history"
       >
         <span className="landing-map__label">
-          PERSONAL HISTORY / CONNECTED RECORDS
+          PERSONAL HISTORY / OCT 20—24
         </span>
 
         <svg
@@ -68,10 +75,16 @@ export default function LandingHero({ onScrollTo }: LandingHeroProps) {
             className="landing-map__relation"
             d="M142 284C196 224 228 201 282 146M416 178C461 232 500 246 548 250M282 308C346 362 443 370 548 250"
           />
-          <circle className="map-point" cx="142" cy="284" r="5" />
-          <circle className="map-point" cx="282" cy="146" r="5" />
-          <circle className="map-point" cx="416" cy="178" r="5" />
-          <circle className="map-point map-point--active" cx="548" cy="250" r="6" />
+          <rect className="map-point" x="137" y="279" width="10" height="10" />
+          <rect className="map-point" x="277" y="141" width="10" height="10" />
+          <rect className="map-point" x="411" y="173" width="10" height="10" />
+          <rect
+            className="map-point map-point--active"
+            x="542"
+            y="244"
+            width="12"
+            height="12"
+          />
         </svg>
 
         <div className="landing-map__node node-a">
@@ -101,22 +114,16 @@ export default function LandingHero({ onScrollTo }: LandingHeroProps) {
         <div className="landing-map__node node-d is-active">
           <i />
           <span>
-            <small>PROGRESS / 01</small>
+            <small>CRITERIA MET</small>
             <strong>10 reading sessions</strong>
           </span>
         </div>
 
-        <div className="landing-map__activity">
-          <span>ACTIVITY / RECENT</span>
-          <div className="activity-grid" aria-label="Illustrative activity grid">
-            {Array.from({ length: 35 }, (_, index) => (
-              <i
-                key={index}
-                className={ACTIVE_CELLS.includes(index) ? 'has-data' : ''}
-              />
-            ))}
-          </div>
-        </div>
+        <ActivityHeatmap
+          variant="preview"
+          selectedDay={selectedDay}
+          onSelectDay={onSelectDay}
+        />
       </div>
 
       <button

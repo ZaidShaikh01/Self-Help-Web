@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 interface PromptReflectionCardProps {
@@ -26,7 +26,8 @@ export default function PromptReflectionCard({
 }: PromptReflectionCardProps) {
   const [inputValue, setInputValue] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (inputValue.trim()) {
       onSubmit(inputValue);
       setInputValue("");
@@ -34,43 +35,34 @@ export default function PromptReflectionCard({
   };
 
   return (
-    <div
-      className={`relative rounded-2xl border-2 border-[#ff3d00]/80 bg-[#fbfbf9] p-7 shadow-[0_8px_20px_-6px_rgba(255,61,0,0.1)] font-mono ${className}`}
-    >
-      {/* Top Header Row (Category & Code) */}
-      <div className="flex items-center justify-between mb-3 text-[10px] font-bold tracking-widest text-[#ff3d00]">
+    <section className={`prompt-reflection-card ${className}`}>
+      <div className="prompt-reflection-card__header">
         <span>{category}</span>
         <span>{code}</span>
       </div>
 
-      {/* Main Prompt Question Heading */}
-      <h3 className="font-sans text-2xl font-extrabold tracking-tight text-neutral-900 mb-2">
+      <h2 className="prompt-reflection-card__title">
         {title}
-      </h3>
+      </h2>
 
-      {/* Subtitle / Helper Instruction */}
-      <p className="font-sans text-xs text-neutral-500 mb-6">
-        {subtitle}
-      </p>
+      <p className="prompt-reflection-card__subtitle">{subtitle}</p>
 
-      {/* Interactive Input Container */}
-      <div className="flex items-center justify-between rounded-xl bg-transparent px-4 py-3 transition-all focus-within:border border-[#ff3d00]">
+      <form className="prompt-reflection-card__form" onSubmit={handleSubmit}>
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder={placeholder}
-          className="w-full bg-transparent text-[12px] font-sans text-neutral-800 placeholder-neutral-400 focus:outline-none"
+          aria-label="Today's reflection"
+          className="prompt-reflection-card__input"
         />
         <button
-          onClick={handleSubmit}
+          type="submit"
           aria-label="Submit reflection"
-          className="text-[#ff3d00] hover:translate-x-1 transition-transform cursor-pointer pl-3"
         >
           <ArrowRight size={18} />
         </button>
-      </div>
-    </div>
+      </form>
+    </section>
   );
 }

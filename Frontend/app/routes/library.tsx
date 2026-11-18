@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { Plus, RefreshCw, Sparkles } from 'lucide-react';
 import AddModal, {
   type NewBookData,
@@ -33,6 +34,8 @@ const CATEGORIES: CategoryFilter[] = [
 ];
 
 export default function Library() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ActiveLibraryTab>('books');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('All');
@@ -42,6 +45,14 @@ export default function Library() {
   const [readingBook, setReadingBook] = useState<Resource | null>(null);
   const [readerType, setReaderType] = useState<'pdf' | 'epub' | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    const state = location.state as { focusSearch?: boolean } | null;
+    if (!state?.focusSearch) return;
+
+    document.getElementById('library-search-input')?.focus();
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.key, location.pathname, location.state, navigate]);
 
   const {
     books,

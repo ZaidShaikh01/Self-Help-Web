@@ -25,9 +25,9 @@ export default function MobileNav({ onSearch = () => {} }: MobileNavProps) {
           <span>{label}</span>
         </NavLink>
       ))}
-      <button type="button" onClick={onSearch} aria-label="Search and options">
+      <button type="button" onClick={onSearch} aria-label="Search books and notes">
         <Icon name="search" size={18} />
-        <span>More</span>
+        <span>Search</span>
       </button>
     </nav>
   );

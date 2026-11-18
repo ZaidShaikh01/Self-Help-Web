@@ -15,6 +15,7 @@ export interface HeaderProps {
   onNotifications?: () => void;
   onToggleTheme?: () => void;
   dark?: boolean;
+  dashboardMode?: boolean;
 }
 
 function resolveSection(pathname: string): string {
@@ -37,6 +38,7 @@ export default function Header({
   onNotifications = () => {},
   onToggleTheme = () => {},
   dark = false,
+  dashboardMode = false,
 }: HeaderProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -104,11 +106,15 @@ export default function Header({
         <button
           type="button"
           onClick={onSearch}
-          aria-label="Search (⌘K)"
-          className="hidden h-9 w-44 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[10px] uppercase tracking-wider text-[var(--text-3)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:flex xl:w-56"
+          aria-label={`${dashboardMode ? 'Search anything' : 'Search'} (⌘K)`}
+          className={`hidden h-9 w-44 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[10px] uppercase tracking-wider text-[var(--text-3)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:flex ${
+            dashboardMode ? 'today-toolbar-search' : 'xl:w-56'
+          }`}
         >
           <Icon name="search" size={15} />
-          <span className="flex-1 text-left">Search…</span>
+          <span className="flex-1 text-left">
+            {dashboardMode ? 'Search anything' : 'Search…'}
+          </span>
           <kbd className="text-[9px]">⌘K</kbd>
         </button>
 
@@ -152,9 +158,12 @@ export default function Header({
           type="button"
           onClick={onToggleTheme}
           aria-label={`Switch theme (currently ${dark ? 'dark' : 'light'})`}
-          className="icon-button hidden sm:inline-grid"
+          className={`icon-button hidden sm:inline-grid ${
+            dashboardMode ? 'today-theme-toggle' : ''
+          }`}
         >
           <Icon name={dark ? 'sun' : 'moon'} size={17} />
+          {dashboardMode && <span>{dark ? 'LIGHT' : 'DARK'}</span>}
         </button>
 
         {/* Logout (desktop) */}

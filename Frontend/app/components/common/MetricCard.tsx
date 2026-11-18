@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 
 interface MetricProgressCardProps {
   title?: string;
@@ -6,6 +6,7 @@ interface MetricProgressCardProps {
   total?: number;
   description?: string;
   className?: string;
+  children?: ReactNode;
 }
 
 /**
@@ -18,37 +19,39 @@ export default function MetricProgressCard({
   total = 4,
   description = "No perfect day required. Your history is made one useful action at a time.",
   className = "",
+  children,
 }: MetricProgressCardProps) {
-  // Calculate progress percentage for the bar width
-  const percentage = total > 0 ? Math.min(Math.max((current / total) * 100, 0), 100) : 0;
+  const safeTotal = Math.max(0, total);
+  const safeCurrent = Math.max(0, Math.min(current, safeTotal));
+  const percentage = safeTotal > 0 ? (safeCurrent / safeTotal) * 100 : 0;
 
   return (
-    <div
-      className={`rounded-2xl border border-[##72726F]] bg-[#f8f8f8] p-5 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.05)] font-mono ${className}`}
-    >
-      {/* Card Section Header */}
-      <h4 className="text-[10px] font-bold tracking-widest text-neutral-400 mb-3">
+    <article className={`metric-progress-card ${className}`}>
+      <h2 className="metric-progress-card__title">
         {title}
-      </h4>
+      </h2>
 
-      {/* Metric Ratio Display (Current / Total) */}
-      <div className="font-sans text-3xl font-semibold text-neutral-900 mb-3">
-        {current}
-        <span className="text-neutral-400 text-lg font-normal">/{total}</span>
+      <div className="metric-progress-card__value">
+        {safeCurrent}
+        <span>/{safeTotal}</span>
       </div>
 
-      {/* Progress Track & Fill Bar */}
-      <div className="h-1.5 w-full bg-neutral-200 rounded-full mb-3 overflow-hidden">
+      <div
+        className="metric-progress-card__track"
+        role="progressbar"
+        aria-label={`${title} progress`}
+        aria-valuemin={0}
+        aria-valuemax={safeTotal}
+        aria-valuenow={safeCurrent}
+      >
         <div
-          className="h-full bg-[#ff3d00] transition-all duration-300 ease-out"
+          className="metric-progress-card__fill"
           style={{ width: `${percentage}%` }}
         />
       </div>
 
-      {/* Supporting Description / Quote */}
-      <p className="font-sans text-[11px] text-neutral-500 leading-relaxed">
-        {description}
-      </p>
-    </div>
+      <p className="metric-progress-card__description">{description}</p>
+      {children}
+    </article>
   );
 }

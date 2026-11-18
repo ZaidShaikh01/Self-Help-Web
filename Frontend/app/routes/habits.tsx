@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import HabitFormModal from '~/components/features/habits/HabitFormModal';
 import HabitHistoryModal from '~/components/features/habits/HabitHistoryModal';
 import HabitOverview from '~/components/features/habits/HabitOverview';
@@ -11,6 +12,8 @@ import { useHabits } from '~/hooks/useHabits';
 import type { Habit } from '~/lib/habits';
 
 export default function HabitsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showArchived, setShowArchived] = useState(false);
   const [selectedTag, setSelectedTag] = useState('all');
   const [search, setSearch] = useState('');
@@ -36,6 +39,22 @@ export default function HabitsPage() {
     adjustProgress,
     manageHabit,
   } = useHabits(showArchived);
+
+  useEffect(() => {
+    const state = location.state as { openQuickCapture?: boolean } | null;
+    if (!state?.openQuickCapture) return;
+
+    clearMessages();
+    setEditingHabit(null);
+    setIsFormOpen(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [
+    clearMessages,
+    location.key,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
 
   const availableTags = useMemo(
     () => [...new Set(habits.flatMap((habit) => habit.tags))].sort(),

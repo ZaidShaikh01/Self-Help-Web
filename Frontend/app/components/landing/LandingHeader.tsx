@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 
 interface LandingHeaderProps {
   scrolled: boolean;
+  progress: number;
   menuOpen: boolean;
   onToggleMenu: () => void;
   onCloseMenu: () => void;
@@ -10,6 +11,7 @@ interface LandingHeaderProps {
 
 export default function LandingHeader({
   scrolled,
+  progress,
   menuOpen,
   onToggleMenu,
   onCloseMenu,
@@ -75,8 +77,16 @@ export default function LandingHeader({
         aria-expanded={menuOpen}
         aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
       >
-        {menuOpen ? '×' : '☰'}
+        <span
+          className={`menu-icon ${menuOpen ? 'is-open' : ''}`}
+          aria-hidden="true"
+        >
+          <i />
+        </span>
       </button>
+      <span className="public-progress" aria-label={`${progress}% page progress`}>
+        {String(progress).padStart(3, '0')}%
+      </span>
     </header>
   );
 }

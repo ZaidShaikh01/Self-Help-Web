@@ -24,7 +24,7 @@ export default function LandingFooter({ onScrollTo }: LandingFooterProps) {
       <div>
         <strong>Product</strong>
         <button type="button" onClick={() => onScrollTo('product')}>
-          Product views
+          Today
         </button>
         <button type="button" onClick={() => onScrollTo('timeline-story')}>
           Timeline
@@ -37,7 +37,7 @@ export default function LandingFooter({ onScrollTo }: LandingFooterProps) {
       <div>
         <strong>Resources</strong>
         <button type="button" onClick={() => onScrollTo('how-it-works')}>
-          How it works
+          Product overview
         </button>
         <button type="button" onClick={() => onScrollTo('privacy')}>
           Privacy
