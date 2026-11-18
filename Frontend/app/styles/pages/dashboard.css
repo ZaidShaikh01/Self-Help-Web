@@ -13,7 +13,7 @@
 .today-route-shell {
   position: relative;
   left: 8px;
-  width: 100%;
+  width: calc(100% - 8px);
   max-width: 1180px;
   margin: 0 auto;
   padding: 38px 16px 100px;
@@ -257,6 +257,7 @@
 
 .today-strip__track {
   animation: today-marquee 34s linear infinite;
+  will-change: transform;
 }
 
 .today-strip:hover .today-strip__track,
@@ -884,6 +885,7 @@
 
   .today-route-shell {
     left: 0;
+    width: 100%;
     padding: 20px 14px 100px;
   }
 

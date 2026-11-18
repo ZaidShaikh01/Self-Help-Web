@@ -4,7 +4,7 @@
 
 .app-root {
   min-height: 100vh;
-  background: var(--canvas);
+  background-color: transparent;
   color: var(--text);
   position: relative;
 }
@@ -76,6 +76,28 @@
   display: none;
 }
 
+body {
+  background-image: url('/images/guilloche-bg.svg');
+  background-repeat: repeat;
+  background-size: 80px 44px;
+}
+
+.app-root > aside,
+.app-root > div,
+.app-root .utility-bar {
+  background-color: transparent;
+}
+
+.growth-sidebar [data-nav] {
+  min-height: 36px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+}
+
+.growth-sidebar [data-nav]:hover {
+  color: var(--accent);
+}
+
 /* Responsive Shell */
 @media (max-width: 768px) {
   .app-stage,
@@ -123,7 +145,9 @@
     font-size: 8px;
     text-transform: uppercase;
     text-decoration: none;
-    transition: color 150ms ease, background 150ms ease;
+    transition:
+      color 150ms ease,
+      background 150ms ease;
   }
 
   .mobile-nav a.is-active,

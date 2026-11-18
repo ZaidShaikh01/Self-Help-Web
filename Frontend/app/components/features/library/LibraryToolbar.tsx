@@ -1,110 +1,127 @@
-import React from 'react';
-import { BookOpen, FileText, Search } from 'lucide-react';
-import type { ResourceCategory } from '~/lib/library';
+import { Grid2X2, List, Search } from 'lucide-react';
+import type { ResourceCategory, ResourceType } from '~/lib/library';
 
-export type CategoryFilter = 'All' | ResourceCategory;
 export type ActiveLibraryTab = 'books' | 'notes';
+export type CategoryFilter = 'All' | ResourceCategory;
+export type LibraryStatusFilter = 'all' | 'In Progress' | 'Completed';
+export type LibraryViewMode = 'grid' | 'list';
+export type LibraryTypeFilter = 'All Types' | ResourceType;
 
 interface LibraryToolbarProps {
   activeTab: ActiveLibraryTab;
-  onTabChange: (tab: ActiveLibraryTab) => void;
-  booksCount: number;
-  notesCount: number;
   searchQuery: string;
-  onSearchChange: (val: string) => void;
+  onSearchChange: (value: string) => void;
   selectedCategory: CategoryFilter;
-  onCategoryChange: (cat: CategoryFilter) => void;
+  onCategoryChange: (category: CategoryFilter) => void;
   categories: CategoryFilter[];
+  selectedType: LibraryTypeFilter;
+  onTypeChange: (type: LibraryTypeFilter) => void;
+  selectedStatus: LibraryStatusFilter;
+  onStatusChange: (status: LibraryStatusFilter) => void;
+  viewMode: LibraryViewMode;
+  onViewModeChange: (mode: LibraryViewMode) => void;
 }
 
 export default function LibraryToolbar({
   activeTab,
-  onTabChange,
-  booksCount,
-  notesCount,
   searchQuery,
   onSearchChange,
   selectedCategory,
   onCategoryChange,
   categories,
+  selectedType,
+  onTypeChange,
+  selectedStatus,
+  onStatusChange,
+  viewMode,
+  onViewModeChange,
 }: LibraryToolbarProps) {
   return (
-    <div className="space-y-4">
-      {/* SEARCH & TAB SWITCHER BAR */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
-        {/* Tab Switcher */}
-        <div className="flex w-fit rounded-lg border border-[var(--border-subtle)] bg-[var(--canvas-2)] p-1">
-          <button
-            type="button"
-            onClick={() => onTabChange('books')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              activeTab === 'books'
-                ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
-                : 'text-[var(--text-3)] hover:text-[var(--text)]'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" /> Books Library ({booksCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => onTabChange('notes')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              activeTab === 'notes'
-                ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
-                : 'text-[var(--text-3)] hover:text-[var(--text)]'
-            }`}
-          >
-            <FileText className="w-4 h-4" /> Notes &amp; Quotes ({notesCount})
-          </button>
-        </div>
+    <div className="library-toolbar">
+      <label className="library-search">
+        <Search aria-hidden="true" size={15} />
+        <input
+          id="library-search-input"
+          type="search"
+          aria-label="Search your library"
+          placeholder="Search your library"
+          value={searchQuery}
+          onChange={(event) => onSearchChange(event.target.value)}
+        />
+      </label>
 
-        {/* Search Box */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-3)]" />
-          <input
-            id="library-search-input"
-            type="text"
-            aria-label="Search books and notes"
-            placeholder={
-              activeTab === 'books'
-                ? 'Search books or authors…'
-                : 'Search notes, quotes, or keywords…'
-            }
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-10 pr-12 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] transition-colors focus:border-[var(--accent)] focus:outline-none"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-3)] hover:text-[var(--text)]"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* CATEGORY FILTER CHIPS (Only shown in books tab) */}
       {activeTab === 'books' && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => onCategoryChange(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                selectedCategory === cat
-                  ? 'bg-[var(--granite-strong)] text-[var(--surface)] shadow-sm'
-                  : 'border border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-2)] hover:border-[var(--border)]'
-              }`}
+        <div className="library-filters" aria-label="Library filters">
+          <label className="library-select-wrap">
+            <span className="sr-only">Filter by resource type</span>
+            <select
+              value={selectedType}
+              onChange={(event) =>
+                onTypeChange(event.target.value as LibraryTypeFilter)
+              }
             >
-              {cat}
+              <option value="All Types">All types</option>
+              <option value="Book">Books</option>
+              <option value="Article">Articles</option>
+              <option value="YouTube">YouTube</option>
+              <option value="Documentary">Documentaries</option>
+            </select>
+          </label>
+
+          {(['In Progress', 'Completed'] as const).map((status) => (
+            <button
+              key={status}
+              type="button"
+              aria-pressed={selectedStatus === status}
+              className={`library-status-filter ${
+                selectedStatus === status ? 'is-active' : ''
+              }`}
+              onClick={() =>
+                onStatusChange(selectedStatus === status ? 'all' : status)
+              }
+            >
+              {status.toUpperCase()}
             </button>
           ))}
+
+          <label className="library-select-wrap library-category-select">
+            <span className="sr-only">Filter by category</span>
+            <select
+              value={selectedCategory}
+              onChange={(event) =>
+                onCategoryChange(event.target.value as CategoryFilter)
+              }
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category === 'All' ? 'All categories' : category}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       )}
+
+      <div className="library-view-switch" aria-label="Display mode">
+        <button
+          type="button"
+          aria-label="Show list view"
+          aria-pressed={viewMode === 'list'}
+          className={viewMode === 'list' ? 'is-active' : ''}
+          onClick={() => onViewModeChange('list')}
+        >
+          <List size={15} />
+        </button>
+        <button
+          type="button"
+          aria-label="Show grid view"
+          aria-pressed={viewMode === 'grid'}
+          className={viewMode === 'grid' ? 'is-active' : ''}
+          onClick={() => onViewModeChange('grid')}
+        >
+          <Grid2X2 size={15} />
+        </button>
+      </div>
     </div>
   );
 }

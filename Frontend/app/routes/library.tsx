@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { Plus, RefreshCw, Sparkles } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import AddModal, {
   type NewBookData,
   type NewNoteData,
@@ -13,6 +13,9 @@ import EpubReaderModal from '~/components/features/library/EpubReaderModal';
 import LibraryToolbar, {
   type ActiveLibraryTab,
   type CategoryFilter,
+  type LibraryStatusFilter,
+  type LibraryTypeFilter,
+  type LibraryViewMode,
 } from '~/components/features/library/LibraryToolbar';
 import NotesGrid from '~/components/features/library/NotesGrid';
 import PdfReaderModal from '~/components/features/library/PdfReaderModal';
@@ -39,6 +42,10 @@ export default function Library() {
   const [activeTab, setActiveTab] = useState<ActiveLibraryTab>('books');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('All');
+  const [selectedType, setSelectedType] = useState<LibraryTypeFilter>('All Types');
+  const [selectedStatus, setSelectedStatus] =
+    useState<LibraryStatusFilter>('all');
+  const [viewMode, setViewMode] = useState<LibraryViewMode>('grid');
   const [selectedBook, setSelectedBook] = useState<Resource | null>(null);
   const [editingBook, setEditingBook] = useState<Resource | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -91,9 +98,19 @@ export default function Library() {
         (book.author && book.author.toLowerCase().includes(q));
       const matchesCategory =
         selectedCategory === 'All' || book.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesType =
+        selectedType === 'All Types' || book.type === selectedType;
+      const matchesStatus =
+        selectedStatus === 'all' || book.status === selectedStatus;
+      return matchesSearch && matchesCategory && matchesType && matchesStatus;
     });
-  }, [books, searchQuery, selectedCategory]);
+  }, [
+    books,
+    searchQuery,
+    selectedCategory,
+    selectedType,
+    selectedStatus,
+  ]);
 
   const filteredNotes = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -190,118 +207,118 @@ export default function Library() {
   };
 
   return (
-    <div className="route-enter mx-auto min-h-screen max-w-6xl space-y-8 rounded-xl bg-[var(--canvas)] p-4 font-sans text-[var(--text)] sm:p-8">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-6 md:flex-row md:items-center">
+    <div className="library-page route-enter">
+      <header className="library-page__header">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-3)]">
-            <Sparkles className="h-4 w-4 text-[var(--accent-text)]" />
-            <span>Knowledge Base</span>
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)]">
-            Library &amp; Notes
-          </h1>
-          <p className="text-xs text-[var(--text-3)]">
-            Manage your active reads, summaries, and personal reflections.
-          </p>
+          <h1>LIBRARY</h1>
+          <p>Collect what teaches you something.</p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex cursor-pointer items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-hover)]"
-        >
-          <Plus className="w-4 h-4" /> Add New Item
-        </button>
-      </div>
-
-      {/* ERROR BANNER */}
-      {error && (
-        <div
-          role="alert"
-          className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-        >
-          <div>
-            <p className="font-semibold">Unable to load library records</p>
-            <p className="text-xs text-red-600 mt-0.5">{error}</p>
-          </div>
+        <div className="library-page__actions">
           <button
             type="button"
-            onClick={() => void reload()}
-            className="flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+            className="library-notes-toggle"
+            onClick={() =>
+              setActiveTab(activeTab === 'books' ? 'notes' : 'books')
+            }
           >
-            <RefreshCw className="w-3.5 h-3.5" /> Retry
+            {activeTab === 'books' ? (
+              <>NOTES &amp; QUOTES <span>{notes.length}</span></>
+            ) : (
+              <>PERSONAL ARCHIVE <span>{books.length}</span></>
+            )}
+          </button>
+          <button
+            type="button"
+            className="library-add-button"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <Plus size={15} aria-hidden="true" />
+            ADD RESOURCE
+          </button>
+        </div>
+      </header>
+
+      {error && (
+        <div className="library-error" role="alert">
+          <div>
+            <strong>Unable to load library records</strong>
+            <span>{error}</span>
+          </div>
+          <button type="button" onClick={() => void reload()}>
+            <RefreshCw size={14} aria-hidden="true" />
+            Retry
           </button>
         </div>
       )}
 
-      {/* TOOLBAR */}
       <LibraryToolbar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
-        booksCount={books.length}
-        notesCount={notes.length}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
         categories={CATEGORIES}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
-      {/* MAIN CONTENT AREA */}
-      {isLoading ? (
-        <div
-          className={`grid grid-cols-1 gap-6 ${activeTab === 'books' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}
-          role="status"
-          aria-label={`Loading ${activeTab === 'books' ? 'books' : 'notes'}`}
-        >
-          {Array.from({ length: activeTab === 'books' ? 6 : 4 }, (_, index) => (
-            <article
-              key={index}
-              className="space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5"
-            >
-              <div className="flex items-start justify-between">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-4 w-4 rounded-full" />
-              </div>
-              {activeTab === 'books' ? (
-                <div className="flex items-center gap-4 py-2">
-                  <Skeleton className="h-22 w-16 shrink-0 rounded-md" />
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <Skeleton className="h-4 w-4/5" />
-                    <Skeleton className="h-3 w-2/5" />
-                    <Skeleton className="h-3 w-full" />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-3/5" />
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-4/5" />
-                  <Skeleton className="h-3 w-2/3" />
-                </div>
-              )}
-              <div className="space-y-2 border-t border-[var(--border-subtle)] pt-3">
-                <Skeleton className="h-3 w-2/5" />
-                <Skeleton className="h-1.5 w-full rounded-full" />
-              </div>
-            </article>
-          ))}
+      <section className="library-archive" aria-labelledby="library-archive-title">
+        <div className="library-archive__heading">
+          <h2 id="library-archive-title">
+            {activeTab === 'books' ? 'PERSONAL ARCHIVE' : 'NOTES & QUOTES'}
+          </h2>
+          <span>
+            {activeTab === 'books'
+              ? `${filteredBooks.length} resources · sorted by recent`
+              : `${filteredNotes.length} notes · sorted by recent`}
+          </span>
         </div>
-      ) : activeTab === 'books' ? (
-        <BookGrid
-          books={filteredBooks}
-          onSelectBook={setSelectedBook}
-          isFiltered={Boolean(searchQuery || selectedCategory !== 'All')}
-        />
-      ) : (
-        <NotesGrid
-          notes={filteredNotes}
-          isFiltered={Boolean(searchQuery)}
-          onEdit={(note) => setEditingNote(note)}
-          onDelete={handleDeleteNote}
-        />
-      )}
+
+        {isLoading ? (
+          <div
+            className={`library-skeleton-grid ${
+              viewMode === 'list' ? 'is-list' : ''
+            }`}
+            role="status"
+            aria-label={`Loading ${activeTab === 'books' ? 'resources' : 'notes'}`}
+          >
+            {Array.from({ length: activeTab === 'books' ? 6 : 4 }, (_, index) => (
+              <article className="library-skeleton-card" key={index}>
+                <Skeleton className="h-48 w-full rounded-none" />
+                <div className="space-y-2 p-4">
+                  <Skeleton className="h-3 w-2/5" />
+                  <Skeleton className="h-5 w-4/5" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : activeTab === 'books' ? (
+          <BookGrid
+            books={filteredBooks}
+            viewMode={viewMode}
+            onSelectBook={setSelectedBook}
+            isFiltered={Boolean(
+              searchQuery ||
+                selectedCategory !== 'All' ||
+                selectedType !== 'All Types' ||
+                selectedStatus !== 'all',
+            )}
+          />
+        ) : (
+          <NotesGrid
+            notes={filteredNotes}
+            viewMode={viewMode}
+            isFiltered={Boolean(searchQuery)}
+            onEdit={(note) => setEditingNote(note)}
+            onDelete={handleDeleteNote}
+          />
+        )}
+      </section>
 
       {/* BOOK DETAIL MODAL */}
       <BookDetailModal

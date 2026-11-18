@@ -145,7 +145,11 @@ export default function AppLayout() {
         <ScrollProgress />
 
         {/* Scrollable Main Area */}
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main
+          className={`min-h-0 flex-1 overflow-y-auto ${
+            isToday ? 'overflow-x-hidden' : ''
+          }`}
+        >
           <div
             className={
               isToday

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Pencil, Quote, Trash2 } from 'lucide-react';
 import type { Note } from '~/lib/library';
 
@@ -29,21 +28,21 @@ export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
       : note.title || 'Personal Reflection';
 
   return (
-    <div className="bg-white border border-[#EEEEEE] rounded-xl p-6 shadow-sm hover:border-[#D0D1D2] transition-all space-y-4 flex flex-col justify-between">
+    <article className="library-note-card">
       <div className="space-y-3">
         <div className="flex justify-between items-center gap-2">
-          <span className="text-xs font-semibold text-[#3E6AE1] bg-[#3E6AE1]/10 px-2 py-0.5 rounded truncate max-w-[200px]">
+          <span className="library-note-card__source">
             {displayTitle}
           </span>
-          <span className="text-[11px] text-[#5C5E62] shrink-0 font-mono">
+          <span className="library-note-card__date">
             {formatNoteDate(note.createdAt)}
           </span>
         </div>
 
         {note.quote && (
-          <div className="flex gap-3 bg-[#F4F4F4] p-3.5 rounded-lg border-l-2 border-[#3E6AE1]">
-            <Quote className="w-5 h-5 text-[#5C5E62] shrink-0 mt-0.5" />
-            <p className="text-sm font-medium text-[#171A20] italic">
+          <div className="library-note-card__quote">
+            <Quote size={17} aria-hidden="true" />
+            <p>
               "{note.quote}"
             </p>
           </div>
@@ -51,29 +50,26 @@ export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
 
         {note.content && (
           <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#5C5E62]">
+            <p className="library-note-card__label">
               Personal Reflection
             </p>
-            <p className="text-xs text-[#393C41] leading-relaxed whitespace-pre-wrap">
+            <p className="library-note-card__content">
               {note.content}
             </p>
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-[#EEEEEE]">
+      <div className="library-note-card__footer">
         <div className="flex flex-wrap items-center gap-1.5">
           {note.tags && note.tags.length > 0 ? (
             note.tags.map((tag: string) => (
-              <span
-                key={tag}
-                className="text-[10px] bg-[#EEEEEE] text-[#5C5E62] px-2 py-0.5 rounded font-mono"
-              >
+              <span key={tag} className="library-note-card__tag">
                 #{tag}
               </span>
             ))
           ) : (
-            <span className="text-[10px] text-[#8C8E92] font-mono">
+            <span className="library-note-card__tag">
               No tags
             </span>
           )}
@@ -84,7 +80,7 @@ export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
             type="button"
             onClick={() => onEdit(note)}
             aria-label={`Edit note for ${displayTitle}`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#3E6AE1] hover:text-[#2D58CC] transition-colors cursor-pointer"
+            className="library-note-card__action"
           >
             <Pencil className="w-3 h-3" />
             <span>Edit</span>
@@ -94,13 +90,13 @@ export default function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
             type="button"
             onClick={() => onDelete(note)}
             aria-label={`Delete note for ${displayTitle}`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700 transition-colors cursor-pointer ml-1"
+            className="library-note-card__action is-danger"
           >
             <Trash2 className="w-3 h-3" />
             <span>Delete</span>
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

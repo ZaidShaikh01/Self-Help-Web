@@ -95,6 +95,11 @@ export default function Sidebar({
   const asideRef = useRef<HTMLElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const readyRef = useRef(false);
+  const dockFrameRef = useRef<number | null>(null);
+  const dockPointerRef = useRef<{
+    element: HTMLElement;
+    clientY: number;
+  } | null>(null);
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
@@ -103,7 +108,15 @@ export default function Sidebar({
     return () => cancelAnimationFrame(id);
   }, []);
 
-  useEffect(() => () => void tlRef.current?.kill(), []);
+  useEffect(
+    () => () => {
+      tlRef.current?.kill();
+      if (dockFrameRef.current !== null) {
+        cancelAnimationFrame(dockFrameRef.current);
+      }
+    },
+    [],
+  );
 
   // GSAP slide transition when collapse target changes
   useEffect(() => {
@@ -173,16 +186,34 @@ export default function Sidebar({
     if (tlRef.current?.isActive()) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const max = collapsed ? DOCK_MAX_RAIL : DOCK_MAX_OPEN;
-    e.currentTarget.querySelectorAll<HTMLElement>('[data-dock]').forEach((el) => {
-      const r = el.getBoundingClientRect();
-      const d = e.clientY - (r.top + r.height / 2);
-      const falloff = Math.exp(-(d * d) / (2 * DOCK_SIGMA * DOCK_SIGMA));
-      setDockScale(el, 1 + (max - 1) * falloff);
+    dockPointerRef.current = {
+      element: e.currentTarget,
+      clientY: e.clientY,
+    };
+    if (dockFrameRef.current !== null) return;
+
+    dockFrameRef.current = requestAnimationFrame(() => {
+      dockFrameRef.current = null;
+      const pointer = dockPointerRef.current;
+      if (!pointer || tlRef.current?.isActive()) return;
+
+      const max = collapsed ? DOCK_MAX_RAIL : DOCK_MAX_OPEN;
+      pointer.element.querySelectorAll<HTMLElement>('[data-dock]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const d = pointer.clientY - (r.top + r.height / 2);
+        const falloff = Math.exp(-(d * d) / (2 * DOCK_SIGMA * DOCK_SIGMA));
+        setDockScale(el, 1 + (max - 1) * falloff);
+      });
     });
   };
 
   const handleDockLeave = (e: React.PointerEvent<HTMLElement>) => {
+    dockPointerRef.current = null;
+    if (dockFrameRef.current !== null) {
+      cancelAnimationFrame(dockFrameRef.current);
+      dockFrameRef.current = null;
+    }
+
     e.currentTarget.querySelectorAll<HTMLElement>('[data-dock]').forEach((el) => setDockScale(el, 1));
   };
 
@@ -192,7 +223,7 @@ export default function Sidebar({
       onClick={() => {
         if (manualCollapsed && !isSmall) setManualCollapsed(false);
       }}
-      className={`hidden md:flex sticky top-0 h-screen shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--canvas-2)] font-mono text-[12px] text-[var(--text)] transition-colors ${
+      className={`growth-sidebar hidden md:flex sticky top-0 h-screen shrink-0 flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--canvas-2)] font-mono text-[12px] text-[var(--text)] transition-colors ${
         collapsed ? 'w-[72px] px-2' : 'w-[248px] px-3'
       } ${collapsed && !isSmall ? 'cursor-pointer' : ''}`}
     >
@@ -294,7 +325,7 @@ export default function Sidebar({
                     : 'w-full px-3 py-2 text-[11px] tracking-wider'
                 } ${
                   isActive
-                    ? 'bg-[var(--accent-soft)] text-[var(--accent-text)] font-semibold border-[var(--accent-soft)]'
+                    ? 'bg-transparent text-[var(--accent)] font-semibold border-transparent'
                     : 'text-[var(--text-2)] hover:bg-[var(--surface)] hover:text-[var(--text)]'
                 }`
               }
