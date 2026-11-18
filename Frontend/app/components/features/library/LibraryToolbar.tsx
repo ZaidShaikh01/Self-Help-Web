@@ -33,14 +33,14 @@ export default function LibraryToolbar({
       {/* SEARCH & TAB SWITCHER BAR */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
         {/* Tab Switcher */}
-        <div className="flex bg-[#EEEEEE]/70 p-1 rounded-lg border border-[#D0D1D2]/40 w-fit">
+        <div className="flex w-fit rounded-lg border border-[var(--border-subtle)] bg-[var(--canvas-2)] p-1">
           <button
             type="button"
             onClick={() => onTabChange('books')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'books'
-                ? 'bg-white text-[#171A20] shadow-sm'
-                : 'text-[#5C5E62] hover:text-[#171A20]'
+                ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                : 'text-[var(--text-3)] hover:text-[var(--text)]'
             }`}
           >
             <BookOpen className="w-4 h-4" /> Books Library ({booksCount})
@@ -50,8 +50,8 @@ export default function LibraryToolbar({
             onClick={() => onTabChange('notes')}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'notes'
-                ? 'bg-white text-[#171A20] shadow-sm'
-                : 'text-[#5C5E62] hover:text-[#171A20]'
+                ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                : 'text-[var(--text-3)] hover:text-[var(--text)]'
             }`}
           >
             <FileText className="w-4 h-4" /> Notes &amp; Quotes ({notesCount})
@@ -60,7 +60,7 @@ export default function LibraryToolbar({
 
         {/* Search Box */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5C5E62]" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-3)]" />
           <input
             type="text"
             placeholder={
@@ -70,13 +70,13 @@ export default function LibraryToolbar({
             }
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-white border border-[#D0D1D2] rounded-lg pl-10 pr-12 py-2 text-sm text-[#171A20] placeholder-[#5C5E62] focus:outline-none focus:border-[#3E6AE1] transition-all shadow-sm"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2 pl-10 pr-12 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] transition-colors focus:border-[var(--accent)] focus:outline-none"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#5C5E62] hover:text-[#171A20]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-3)] hover:text-[var(--text)]"
             >
               Clear
             </button>
@@ -94,8 +94,8 @@ export default function LibraryToolbar({
               onClick={() => onCategoryChange(cat)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 selectedCategory === cat
-                  ? 'bg-[#171A20] text-white shadow-sm'
-                  : 'bg-white border border-[#EEEEEE] text-[#393C41] hover:border-[#D0D1D2]'
+                  ? 'bg-[var(--granite-strong)] text-[var(--surface)] shadow-sm'
+                  : 'border border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-2)] hover:border-[var(--border)]'
               }`}
             >
               {cat}

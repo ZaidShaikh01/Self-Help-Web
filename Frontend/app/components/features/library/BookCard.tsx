@@ -43,11 +43,11 @@ export default function BookCard({ book, onClick }: BookCardProps) {
   return (
     <div
       onClick={onClick}
-      className="group relative bg-white border border-[#EEEEEE] rounded-xl p-5 shadow-sm hover:shadow-md hover:border-[#D0D1D2] transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4"
+      className="group relative flex cursor-pointer flex-col justify-between space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-[var(--border)]"
     >
       {/* Top Meta */}
       <div className="flex justify-between items-start">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-[#3E6AE1] bg-[#3E6AE1]/10 px-2 py-0.5 rounded">
+        <span className="rounded bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--accent-text)]">
           {book.category || 'Book'}
         </span>
         <div className="flex items-center gap-1.5">
@@ -62,7 +62,7 @@ export default function BookCard({ book, onClick }: BookCardProps) {
               {isEpub ? 'EPUB' : 'PDF'}
             </span>
           )}
-          <Bookmark className="w-4 h-4 text-[#5C5E62] group-hover:text-[#171A20] transition-colors" />
+          <Bookmark className="h-4 w-4 text-[var(--text-3)] transition-colors group-hover:text-[var(--text)]" />
         </div>
       </div>
 
@@ -76,14 +76,14 @@ export default function BookCard({ book, onClick }: BookCardProps) {
           </span>
         </div>
         <div className="space-y-1 flex-1 min-w-0">
-          <h3 className="font-semibold text-base text-[#171A20] group-hover:text-[#3E6AE1] transition-colors truncate">
+          <h3 className="truncate text-base font-semibold text-[var(--text)] transition-colors group-hover:text-[var(--accent-text)]">
             {book.title}
           </h3>
           {book.author && (
-            <p className="text-xs text-[#5C5E62] truncate">{book.author}</p>
+            <p className="truncate text-xs text-[var(--text-3)]">{book.author}</p>
           )}
           {book.summary && (
-            <p className="text-[11px] text-[#393C41] line-clamp-2 mt-1">
+            <p className="mt-1 line-clamp-2 text-[11px] text-[var(--text-2)]">
               {book.summary}
             </p>
           )}
@@ -91,16 +91,16 @@ export default function BookCard({ book, onClick }: BookCardProps) {
       </div>
 
       {/* Progress Tracker */}
-      <div className="space-y-1.5 pt-2 border-t border-[#EEEEEE]">
-        <div className="flex justify-between text-xs text-[#5C5E62]">
+      <div className="space-y-1.5 border-t border-[var(--border-subtle)] pt-2">
+        <div className="flex justify-between text-xs text-[var(--text-3)]">
           <span>Reading Progress</span>
-          <span className="font-medium text-[#171A20]">
+          <span className="font-medium text-[var(--text)]">
             {progressPercent}%
           </span>
         </div>
-        <div className="w-full bg-[#EEEEEE] h-1.5 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-inset)]">
           <div
-            className="bg-[#171A20] h-full rounded-full transition-all duration-500"
+            className="h-full rounded-full bg-[var(--text)] transition-[width] duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>

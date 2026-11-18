@@ -7,6 +7,8 @@ import Header from '~/components/layout/Header';
 import Sidebar from '~/components/layout/Sidebar';
 import MobileNav from '~/components/layout/MobileNav';
 import { Button } from '~/components/ui/Button';
+import Skeleton from '~/components/ui/Skeleton';
+import { useTheme } from '~/hooks/useTheme';
 
 type AuthCheck = {
   pathname: string;
@@ -16,6 +18,7 @@ type AuthCheck = {
 export default function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { isDark, toggleTheme } = useTheme();
 
   const [authCheck, setAuthCheck] = useState<AuthCheck>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -60,10 +63,23 @@ export default function AppLayout() {
   if (!authCheck || authCheck.pathname !== pathname) {
     return (
       <main
-        className="min-h-screen grid place-items-center bg-[var(--canvas)] text-xs font-mono uppercase tracking-widest text-[var(--text-3)]"
+        className="grid min-h-screen place-items-center bg-[var(--canvas)] p-6"
         role="status"
+        aria-label="Verifying your session"
       >
-        Verifying your session…
+        <div className="w-full max-w-3xl space-y-6">
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-9 w-36 rounded-lg" />
+          </div>
+          <Skeleton className="h-10 w-2/5" />
+          <Skeleton className="h-4 w-3/5" />
+          <div className="grid gap-4 pt-4 sm:grid-cols-2">
+            <Skeleton className="h-36 rounded-xl" />
+            <Skeleton className="h-36 rounded-xl" />
+          </div>
+          <span className="sr-only">Verifying your session…</span>
+        </div>
       </main>
     );
   }
@@ -101,7 +117,7 @@ export default function AppLayout() {
       {/* Main Content Stage */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--canvas)]">
         {/* Top Utility Bar */}
-        <Header />
+        <Header onToggleTheme={toggleTheme} dark={isDark} />
         <ScrollProgress />
 
         {/* Scrollable Main Area */}

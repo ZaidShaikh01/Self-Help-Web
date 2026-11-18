@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Icon } from '~/components/ui/Icon';
+import Skeleton from '~/components/ui/Skeleton';
 import { useHabitStats, type HabitStatsRange } from '~/hooks/useHabitStats';
 import type { Habit } from '~/lib/habits';
 
@@ -130,9 +131,28 @@ export default function HabitHistoryModal({
         </div>
 
         {isLoading ? (
-          <div className="flex min-h-48 items-center justify-center gap-2 font-mono text-xs uppercase tracking-wider text-[var(--text-3)]">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
-            Loading habit history…
+          <div className="mt-5 space-y-5" role="status" aria-label="Loading habit history">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              {Array.from({ length: 4 }, (_, index) => (
+                <article key={index} className={statCardClass}>
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="mt-3 h-7 w-14" />
+                  <Skeleton className="mt-2 h-3 w-24" />
+                </article>
+              ))}
+            </div>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <Skeleton className="h-4 w-36" />
+              <div className="mt-5 flex h-36 items-end gap-2">
+                {Array.from({ length: 12 }, (_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="flex-1 rounded-t"
+                    style={{ height: `${35 + ((index * 37) % 60)}%` }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ) : error ? (
           <div

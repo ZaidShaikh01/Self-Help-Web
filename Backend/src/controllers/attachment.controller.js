@@ -28,7 +28,6 @@ export const uploadAttachment = asyncHandler(async (req, res) => {
   if (!file) {
     throw new ApiError(400, 'Attachment file is required (form-data key: "file")');
   }
-
   const filePath = file.path;
 
   try {

@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Bookmark,
 } from 'lucide-react';
+import Skeleton from '~/components/ui/Skeleton';
 import { getBookAttachmentStreamUrl, type Resource } from '~/lib/library';
 
 interface EpubReaderModalProps {
@@ -333,9 +334,23 @@ export default function EpubReaderModal({
       {/* Main EPUB Reader Viewport */}
       <div className="relative flex-1 overflow-hidden bg-[#FAF9F8]">
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#FAF9F8] text-[#5C5E62] text-sm z-10">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#3E6AE1] border-t-transparent" />
-            <span>Loading EPUB book…</span>
+          <div
+            className="absolute inset-0 z-10 flex items-center justify-center overflow-auto bg-[#FAF9F8] p-4 sm:p-8"
+            role="status"
+            aria-label="Loading EPUB book"
+          >
+            <div className="min-h-[70%] w-full max-w-2xl space-y-5 bg-white p-8 shadow-lg sm:p-12">
+              <Skeleton className="h-6 w-3/5 bg-neutral-200" />
+              <Skeleton className="h-3 w-2/5 bg-neutral-200" />
+              <div className="space-y-3 pt-8">
+                {Array.from({ length: 12 }, (_, index) => (
+                  <Skeleton
+                    key={index}
+                    className={`h-3 bg-neutral-200 ${index % 5 === 4 ? 'w-4/5' : 'w-full'}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

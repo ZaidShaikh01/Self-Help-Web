@@ -10,6 +10,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
+import Skeleton from '~/components/ui/Skeleton';
 import { getBookAttachmentStreamUrl, type Resource, type ResourceStatus } from '~/lib/library';
 
 interface PdfReaderModalProps {
@@ -338,9 +339,28 @@ export default function PdfReaderModal({
       {/* Main Document Viewport */}
       <div className="flex-1 overflow-auto bg-[#26282B] p-4 flex items-center justify-center">
         {isLoading && (
-          <div className="flex flex-col items-center gap-3 text-neutral-400 text-sm">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#3E6AE1] border-t-transparent" />
-            <span>Loading document…</span>
+          <div
+            className="flex min-h-full w-full items-center justify-center py-4"
+            role="status"
+            aria-label="Loading document"
+          >
+            <div className="min-h-[65vh] w-full max-w-2xl space-y-5 rounded-sm bg-[#F8F8F6] p-8 shadow-2xl sm:p-12">
+              <Skeleton className="h-6 w-3/5 bg-neutral-200" />
+              <Skeleton className="h-3 w-2/5 bg-neutral-200" />
+              <div className="space-y-3 pt-8">
+                {Array.from({ length: 10 }, (_, index) => (
+                  <Skeleton
+                    key={index}
+                    className={`h-3 bg-neutral-200 ${index % 4 === 3 ? 'w-4/5' : 'w-full'}`}
+                  />
+                ))}
+              </div>
+              <div className="space-y-3 pt-4">
+                <Skeleton className="h-3 w-full bg-neutral-200" />
+                <Skeleton className="h-3 w-11/12 bg-neutral-200" />
+                <Skeleton className="h-3 w-3/4 bg-neutral-200" />
+              </div>
+            </div>
           </div>
         )}
 

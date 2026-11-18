@@ -110,7 +110,7 @@ export default function HabitsPage() {
   }
 
   return (
-    <section className="space-y-6 text-[var(--text)]">
+    <section className="route-enter space-y-6 text-[var(--text)]">
       {/* Page Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-[var(--border-subtle)] pb-5">
         <div>

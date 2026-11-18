@@ -1,4 +1,5 @@
 import { Icon } from '~/components/ui/Icon';
+import Skeleton from '~/components/ui/Skeleton';
 import type { HabitWeeklySummary, TodayHabit } from '~/lib/habits';
 
 interface HabitOverviewProps {
@@ -30,12 +31,19 @@ export default function HabitOverview({
             <Icon name="today" size={15} />
             Scheduled today
           </div>
-          <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
-            {isLoading ? '—' : todayHabits.length}
-          </p>
-          <p className="mt-1 text-[11px] text-[var(--text-3)]">
-            Habits due today
-          </p>
+          {isLoading ? (
+            <div className="mt-3 space-y-2" role="status" aria-label="Loading habit metrics">
+              <Skeleton className="h-9 w-16" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+          ) : (
+            <>
+              <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
+                {todayHabits.length}
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--text-3)]">Habits due today</p>
+            </>
+          )}
         </article>
 
         <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
@@ -43,16 +51,23 @@ export default function HabitOverview({
             <Icon name="check" size={15} />
             Completed today
           </div>
-          <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
-            {isLoading ? '—' : `${completedToday}/${todayHabits.length}`}
-          </p>
-          <p className="mt-1 text-[11px] text-[var(--text-3)]">
-            {todayHabits.length
-              ? `${Math.round(
-                  (completedToday / todayHabits.length) * 100,
-                )}% of today's habits`
-              : 'Nothing scheduled yet'}
-          </p>
+          {isLoading ? (
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-9 w-20" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          ) : (
+            <>
+              <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
+                {completedToday}/{todayHabits.length}
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--text-3)]">
+                {todayHabits.length
+                  ? `${Math.round((completedToday / todayHabits.length) * 100)}% of today's habits`
+                  : 'Nothing scheduled yet'}
+              </p>
+            </>
+          )}
         </article>
 
         <article className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
@@ -60,14 +75,23 @@ export default function HabitOverview({
             <Icon name="focus" size={15} />
             This week
           </div>
-          <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
-            {isLoading ? '—' : `${weeklyPercent}%`}
-          </p>
-          <p className="mt-1 text-[11px] text-[var(--text-3)]">
-            {weeklySummary
-              ? `${weeklySummary.completedActions} of ${weeklySummary.scheduledActions} scheduled actions`
-              : 'Weekly summary unavailable'}
-          </p>
+          {isLoading ? (
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-9 w-16" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+          ) : (
+            <>
+              <p className="mt-3 font-mono text-3xl font-medium tracking-tight text-[var(--text)]">
+                {weeklyPercent}%
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--text-3)]">
+                {weeklySummary
+                  ? `${weeklySummary.completedActions} of ${weeklySummary.scheduledActions} scheduled actions`
+                  : 'Weekly summary unavailable'}
+              </p>
+            </>
+          )}
         </article>
       </div>
 
@@ -86,9 +110,17 @@ export default function HabitOverview({
         </div>
 
         {isLoading ? (
-          <p className="py-6 text-center text-xs font-mono uppercase tracking-wider text-[var(--text-3)]">
-            Loading weekly activity…
-          </p>
+          <div className="grid grid-cols-7 gap-2 py-2 sm:gap-3" role="status" aria-label="Loading weekly activity">
+            {Array.from({ length: 7 }, (_, index) => (
+              <div key={index} className="flex flex-col items-center gap-2">
+                <Skeleton className="h-3 w-7" />
+                <div className="flex h-12 items-end">
+                  <Skeleton className="h-8 w-5 rounded-t" />
+                </div>
+                <Skeleton className="h-3 w-6" />
+              </div>
+            ))}
+          </div>
         ) : weeklySummary ? (
           <div className="grid grid-cols-7 gap-2 sm:gap-3">
             {weeklySummary.days.map((day) => {

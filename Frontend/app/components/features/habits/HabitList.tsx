@@ -1,5 +1,6 @@
 import { Button } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
+import Skeleton from '~/components/ui/Skeleton';
 import HabitRow from './HabitRow';
 import type { Habit, TodayHabit } from '~/lib/habits';
 import type { ProgressChange } from '~/hooks/useHabits';
@@ -49,9 +50,22 @@ export default function HabitList({
   return (
     <>
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-10 font-mono text-xs uppercase tracking-wider text-[var(--text-3)]">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
-          Loading habits…
+        <div
+          className="divide-y divide-[var(--border-subtle)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
+          role="status"
+          aria-label="Loading habits"
+        >
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={index} className="flex items-center gap-4 px-4 py-4 sm:px-5">
+              <Skeleton className="h-5 w-5 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-2/5" />
+                <Skeleton className="h-3 w-3/5" />
+              </div>
+              <Skeleton className="hidden h-8 w-20 sm:block" />
+              <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
+            </div>
+          ))}
         </div>
       ) : habits.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-12 text-center">

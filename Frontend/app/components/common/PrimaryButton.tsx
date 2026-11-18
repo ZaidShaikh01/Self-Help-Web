@@ -5,7 +5,11 @@ type PrimaryButtonProps ={
 
 const PrimaryButton = ({content,onClick}:PrimaryButtonProps) => {
   return (
-    <button onClick={onClick} className='px-4 py-2 cursor-pointer bg-[#F4F4F4] hover:bg-[#EEEEEE] text-[#171A20] rounded-md text-sm font-medium transition-all shrink-0'>
+    <button
+      type="button"
+      onClick={onClick}
+      className="shrink-0 cursor-pointer rounded-md border border-[var(--border)] bg-[var(--surface-inset)] px-4 py-2 text-sm font-medium text-[var(--text)] transition-colors hover:border-[var(--border-strong)]"
+    >
       {content}
     </button>
   );

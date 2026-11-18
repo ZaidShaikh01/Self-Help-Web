@@ -62,3 +62,41 @@
   --auth-border: var(--border-subtle);
   --auth-accent: var(--accent);
 }
+
+:root[data-theme='dark'] {
+  --canvas: #161616;
+  --canvas-2: #1d1d1c;
+  --surface: #242423;
+  --surface-inset: #30302e;
+
+  --text: #f1f1ed;
+  --text-2: rgba(241, 241, 237, 0.72);
+  --text-3: #aaa9a4;
+  --disabled: #777771;
+
+  --border-subtle: #3b3b38;
+  --border: #51514d;
+  --border-strong: #85857f;
+  --sketch: #51514d;
+
+  --accent-soft: #4a251d;
+  --accent-text: #ff9273;
+  --accent-on-granite: #ff9a7d;
+  --granite: #aaa9a4;
+  --granite-strong: #d1d1cb;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+
+  --landing-canvas: var(--canvas);
+  --landing-surface: var(--surface);
+  --landing-text: var(--text);
+  --landing-muted: var(--text-3);
+  --landing-border: var(--border-subtle);
+  --landing-accent: var(--accent);
+
+  --auth-canvas: var(--canvas);
+  --auth-surface: var(--surface);
+  --auth-text: var(--text);
+  --auth-muted: var(--text-3);
+  --auth-border: var(--border-subtle);
+  --auth-accent: var(--accent);
+}

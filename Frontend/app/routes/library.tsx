@@ -15,6 +15,7 @@ import LibraryToolbar, {
 } from '~/components/features/library/LibraryToolbar';
 import NotesGrid from '~/components/features/library/NotesGrid';
 import PdfReaderModal from '~/components/features/library/PdfReaderModal';
+import Skeleton from '~/components/ui/Skeleton';
 import { useLibrary } from '~/hooks/useLibrary';
 import type {
   Note,
@@ -178,18 +179,18 @@ export default function Library() {
   };
 
   return (
-    <div className="min-h-screen rounded-xl bg-[#F4F4F4] text-[#171A20] p-4 sm:p-8 space-y-8 max-w-6xl mx-auto font-sans">
+    <div className="route-enter mx-auto min-h-screen max-w-6xl space-y-8 rounded-xl bg-[var(--canvas)] p-4 font-sans text-[var(--text)] sm:p-8">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border border-[#EEEEEE] shadow-sm">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-6 md:flex-row md:items-center">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#5C5E62]">
-            <Sparkles className="w-4 h-4 text-[#3E6AE1]" />
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-3)]">
+            <Sparkles className="h-4 w-4 text-[var(--accent-text)]" />
             <span>Knowledge Base</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#171A20] mt-1">
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--text)]">
             Library &amp; Notes
           </h1>
-          <p className="text-xs text-[#5C5E62]">
+          <p className="text-xs text-[var(--text-3)]">
             Manage your active reads, summaries, and personal reflections.
           </p>
         </div>
@@ -197,7 +198,7 @@ export default function Library() {
         <button
           type="button"
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-[#171A20] hover:bg-[#393C41] text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm cursor-pointer"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-hover)]"
         >
           <Plus className="w-4 h-4" /> Add New Item
         </button>
@@ -238,9 +239,43 @@ export default function Library() {
 
       {/* MAIN CONTENT AREA */}
       {isLoading ? (
-        <div className="flex min-h-64 items-center justify-center gap-3 rounded-xl border border-[#EEEEEE] bg-white p-12 text-sm text-[#5C5E62]">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#171A20] border-t-transparent" />
-          Loading your library…
+        <div
+          className={`grid grid-cols-1 gap-6 ${activeTab === 'books' ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}
+          role="status"
+          aria-label={`Loading ${activeTab === 'books' ? 'books' : 'notes'}`}
+        >
+          {Array.from({ length: activeTab === 'books' ? 6 : 4 }, (_, index) => (
+            <article
+              key={index}
+              className="space-y-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5"
+            >
+              <div className="flex items-start justify-between">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-4 w-4 rounded-full" />
+              </div>
+              {activeTab === 'books' ? (
+                <div className="flex items-center gap-4 py-2">
+                  <Skeleton className="h-22 w-16 shrink-0 rounded-md" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-4 w-4/5" />
+                    <Skeleton className="h-3 w-2/5" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-3/5" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-4/5" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              )}
+              <div className="space-y-2 border-t border-[var(--border-subtle)] pt-3">
+                <Skeleton className="h-3 w-2/5" />
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+            </article>
+          ))}
         </div>
       ) : activeTab === 'books' ? (
         <BookGrid

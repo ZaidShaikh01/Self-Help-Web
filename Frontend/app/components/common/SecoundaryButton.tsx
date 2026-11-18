@@ -12,7 +12,11 @@ const SecoundaryButton = ({
   onClick,
 }: SecoundaryButtonProps) => {
   return (
-    <button onClick={onClick} className='flex items-center cursor-pointer gap-1 bg-[#171A20] hover:bg-[#393C41] text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all'>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex cursor-pointer items-center gap-1 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-hover)]"
+    >
       {addPlus && <Plus className='w-4 h-4' />} {content}
     </button>
   );
