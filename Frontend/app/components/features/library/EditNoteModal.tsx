@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import type { Note } from '~/lib/library';
 import type { AvailableBookOption } from '~/components/common/AddModal';
+import ModalLayer from '~/components/common/ModalLayer';
 
 interface EditNoteModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ interface EditNoteModalProps {
 }
 
 const inputCls =
-  'w-full rounded-xl border border-neutral-300 bg-[#f1f1ef] px-4 py-3 text-[14px] text-neutral-900 placeholder:text-neutral-400 transition-colors focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#ff3d00]/20';
+  'w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--text)] placeholder:text-[var(--text-3)] transition-colors focus:border-[var(--accent)] focus:outline-none';
 
 function Field({
   label,
@@ -34,11 +35,11 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-[13px] font-semibold text-neutral-900">
+      <span className="block text-[13px] font-semibold text-[var(--text)]">
         {label}
       </span>
       {hint && (
-        <span className="mt-1.5 block text-[13px] text-neutral-400">
+        <span className="mt-1.5 block text-[13px] text-[var(--text-3)]">
           {hint}
         </span>
       )}
@@ -79,20 +80,6 @@ export default function EditNoteModal({
       setSubmitError(null);
     }
   }, [note, isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isSubmitting) onClose();
-    };
-    document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [isOpen, onClose, isSubmitting]);
 
   if (!isOpen || !note) return null;
 
@@ -144,27 +131,25 @@ export default function EditNoteModal({
   };
 
   return (
-    <div
-      onClick={() => {
-        if (!isSubmitting) onClose();
-      }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
+    <ModalLayer
+      canDismiss={!isSubmitting}
+      onClose={onClose}
+      className="fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-note-title"
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[94vh] w-full max-w-[708px] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:max-h-[92vh] sm:rounded-[28px]"
+        className="flex max-h-[90vh] w-full max-w-[708px] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
       >
         {/* Header */}
-        <div className="relative shrink-0 bg-[#434341] px-5 pb-6 pt-6 sm:px-7 sm:pb-8 sm:pt-7">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+        <div className="relative shrink-0 border-b border-[var(--border-subtle)] px-5 pb-4 pt-5 sm:px-7 sm:pb-4 sm:pt-6">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
             Edit Note
           </p>
           <h3
             id="edit-note-title"
-            className="mt-3 pr-14 font-sans text-[28px] font-normal leading-tight text-white sm:text-[32px] truncate"
+            className="mt-1 truncate pr-14 text-xl font-medium tracking-tight text-[var(--text)]"
           >
             {note.title || 'Note & Quote'}
           </h3>
@@ -173,7 +158,7 @@ export default function EditNoteModal({
             aria-label="Close"
             disabled={isSubmitting}
             onClick={onClose}
-            className="absolute right-5 top-5 grid h-11 w-11 cursor-pointer place-items-center rounded-xl border border-neutral-300 bg-white text-neutral-900 transition-colors hover:bg-neutral-100 disabled:opacity-50 sm:right-7 sm:top-7"
+            className="absolute right-5 top-5 grid h-9 w-9 cursor-pointer place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-3)] transition-colors hover:bg-[var(--canvas-2)] hover:text-[var(--text)] disabled:opacity-50 sm:right-7 sm:top-6"
           >
             <X className="h-5 w-5" />
           </button>
@@ -207,7 +192,7 @@ export default function EditNoteModal({
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-800" />
+                  <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text)]" />
                 </div>
               </Field>
             )}
@@ -255,20 +240,20 @@ export default function EditNoteModal({
           </div>
 
           {/* Footer actions */}
-          <div className="shrink-0 border-t border-neutral-200 px-5 py-4 sm:mx-7 sm:px-0 sm:py-5">
+          <div className="shrink-0 border-t border-[var(--border-subtle)] px-5 py-4 sm:mx-7 sm:px-0 sm:py-5">
             <div className="flex justify-end gap-3">
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={onClose}
-                className="h-12 cursor-pointer rounded-xl border border-neutral-300 bg-white px-6 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-neutral-900 transition-colors hover:bg-neutral-100 disabled:opacity-50"
+                className="h-12 cursor-pointer rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--text)] transition-colors hover:bg-[var(--canvas-2)] disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-12 cursor-pointer rounded-xl bg-[#ff3d00] px-6 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#e03600] disabled:opacity-50"
+                className="h-12 cursor-pointer rounded-xl bg-[var(--accent-fill)] px-6 font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-fill-hover)] disabled:opacity-50"
               >
                 {isSubmitting ? 'Saving…' : 'Save Changes'}
               </button>
@@ -276,6 +261,6 @@ export default function EditNoteModal({
           </div>
         </form>
       </div>
-    </div>
+    </ModalLayer>
   );
 }

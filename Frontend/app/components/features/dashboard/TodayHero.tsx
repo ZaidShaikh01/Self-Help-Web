@@ -5,7 +5,17 @@ function formatStamp(date: Date) {
   return `${year}.${month}.${day}`;
 }
 
-export default function TodayHero() {
+interface TodayHeroProps {
+  actionCount: number;
+  latestActivity?: string;
+  activityState: 'loading' | 'ready' | 'error';
+}
+
+export default function TodayHero({
+  actionCount,
+  latestActivity,
+  activityState,
+}: TodayHeroProps) {
   const today = new Date();
   const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
   const day = today.toLocaleDateString('en-US', { day: '2-digit' });
@@ -17,7 +27,7 @@ export default function TodayHero() {
     <section className="today-hero" aria-labelledby="today-hero-title">
       <div className="today-hero__meta">
         <span>GROWTH MAP / {formatStamp(today)} +</span>
-        <span>GROWTH MAP / DAY 04 / AXIS 43</span>
+        <span>GROWTH MAP / {weekday.toUpperCase()} / AXIS 43</span>
       </div>
 
       <div className="today-hero__copy">
@@ -48,9 +58,25 @@ export default function TodayHero() {
         <circle className="today-hero__point" cx="464" cy="68" r="4" />
       </svg>
 
-      <div className="today-hero__event">
-        <span>01 / READING COMPLETE</span>
-        <span>08:42 / 20 MIN / SOURCE: READING</span>
+      <div className="today-hero__event" aria-live="polite">
+        <span>
+          {activityState === 'loading'
+            ? 'ACTIVITY / LOADING'
+            : activityState === 'error'
+              ? 'ACTIVITY / UNAVAILABLE'
+              : actionCount
+                ? `${String(actionCount).padStart(2, '0')} / ACTIVITY RECORDED`
+                : '01 / A FRESH PAGE'}
+        </span>
+        <span>
+          {activityState === 'loading'
+            ? 'GATHERING YOUR RECENT PROGRESS'
+            : activityState === 'error'
+              ? 'CHECK YOUR CONNECTION TO REFRESH YOUR ACTIVITY'
+              : actionCount
+                ? latestActivity || 'PROGRESS LOGGED TODAY'
+                : 'YOUR NEXT SMALL STEP CAN START HERE'}
+        </span>
       </div>
 
       <div className="today-hero__date" aria-label={`${weekday}, ${monthYear}`}>

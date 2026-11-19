@@ -10,6 +10,7 @@ import {
   AlertCircle,
   FileText,
 } from 'lucide-react';
+import ModalLayer from '~/components/common/ModalLayer';
 import Skeleton from '~/components/ui/Skeleton';
 import { getBookAttachmentStreamUrl, type Resource, type ResourceStatus } from '~/lib/library';
 
@@ -199,7 +200,7 @@ export default function PdfReaderModal({
     }
   };
 
-  // Keyboard navigation & close on Escape
+  // Keyboard navigation; Escape is handled by the shared modal layer.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
@@ -210,9 +211,6 @@ export default function PdfReaderModal({
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
         handlePageChange(currentPage - 1);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleClose();
       }
     };
 
@@ -235,12 +233,16 @@ export default function PdfReaderModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`PDF Reader for ${book.title}`}
-      className="fixed inset-0 z-50 flex flex-col bg-[#171A20] text-white"
+    <ModalLayer
+      onClose={handleClose}
+      className="fixed inset-0 z-[10000] overflow-hidden bg-[#171A20]"
     >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`PDF Reader for ${book.title}`}
+        className="flex h-full w-full flex-col bg-[#171A20] text-white"
+      >
       {/* Top Navigation Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 bg-[#171A20] px-4 py-2.5 shadow-md">
         {/* Book Title & Info */}
@@ -386,6 +388,7 @@ export default function PdfReaderModal({
           <canvas ref={canvasRef} className="max-w-full rounded bg-white" />
         </div>
       </div>
-    </div>
+      </div>
+    </ModalLayer>
   );
 }

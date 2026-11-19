@@ -20,6 +20,8 @@ export default function AppLayout() {
   const { pathname } = useLocation();
   const { isDark, toggleTheme } = useTheme();
   const isToday = pathname === '/dashboard';
+  const isTimeline = pathname === '/timeline' || pathname.startsWith('/timeline/');
+  const isInsights = pathname === '/insights' || pathname.startsWith('/insights/');
   const openSearch = useCallback(
     () => navigate('/library', { state: { focusSearch: true } }),
     [navigate],
@@ -139,8 +141,16 @@ export default function AppLayout() {
           onToggleTheme={toggleTheme}
           dark={isDark}
           dashboardMode={isToday}
-          scope={isToday ? 'LOC' : undefined}
-          section={isToday ? 'Today' : undefined}
+          scope={isToday || isTimeline || isInsights ? 'LOC' : undefined}
+          section={
+            isTimeline
+              ? 'Timeline'
+              : isInsights
+                ? 'Insights'
+                : isToday
+                  ? 'Today'
+                  : undefined
+          }
         />
         <ScrollProgress />
 

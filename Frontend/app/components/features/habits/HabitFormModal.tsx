@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Button } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
+import ModalLayer from '~/components/common/ModalLayer';
 import HabitSchedulePicker from './HabitSchedulePicker';
 import HabitReminderPicker from './HabitReminderPicker';
 import type {
@@ -64,17 +65,6 @@ export default function HabitFormModal({
 
   const [color, setColor] = useState(habit?.color ?? '#fa3600');
   const [formError, setFormError] = useState('');
-
-  useEffect(() => {
-    if (isSaving) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSaving, onClose]);
 
   function toggleDay(day: number) {
     setSelectedDays((current) =>
@@ -160,11 +150,10 @@ export default function HabitFormModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !isSaving) onClose();
-      }}
+    <ModalLayer
+      canDismiss={!isSaving}
+      onClose={onClose}
+      className="fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
     >
       <section
         role="dialog"
@@ -396,6 +385,6 @@ export default function HabitFormModal({
           </div>
         </form>
       </section>
-    </div>
+    </ModalLayer>
   );
 }

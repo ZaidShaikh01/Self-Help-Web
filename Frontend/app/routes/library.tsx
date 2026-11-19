@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Plus, RefreshCw } from 'lucide-react';
 import AddModal, {
@@ -36,15 +36,28 @@ const CATEGORIES: CategoryFilter[] = [
   'Philosophy',
 ];
 
+function getInitialLibraryStatus(search: string): LibraryStatusFilter {
+  const status = new URLSearchParams(search).get('status');
+  return status === 'Plan to Do' ||
+    status === 'In Progress' ||
+    status === 'Completed'
+    ? status
+    : 'all';
+}
+
 export default function Library() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<ActiveLibraryTab>('books');
+  const [activeTab, setActiveTab] = useState<ActiveLibraryTab>(() =>
+    new URLSearchParams(location.search).get('tab') === 'notes'
+      ? 'notes'
+      : 'books',
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('All');
   const [selectedType, setSelectedType] = useState<LibraryTypeFilter>('All Types');
   const [selectedStatus, setSelectedStatus] =
-    useState<LibraryStatusFilter>('all');
+    useState<LibraryStatusFilter>(() => getInitialLibraryStatus(location.search));
   const [viewMode, setViewMode] = useState<LibraryViewMode>('grid');
   const [selectedBook, setSelectedBook] = useState<Resource | null>(null);
   const [editingBook, setEditingBook] = useState<Resource | null>(null);
@@ -52,6 +65,7 @@ export default function Library() {
   const [readingBook, setReadingBook] = useState<Resource | null>(null);
   const [readerType, setReaderType] = useState<'pdf' | 'epub' | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const handledResourceId = useRef('');
 
   useEffect(() => {
     const state = location.state as { focusSearch?: boolean } | null;
@@ -78,6 +92,22 @@ export default function Library() {
     updateExistingNote,
     deleteExistingNote,
   } = useLibrary();
+
+  useEffect(() => {
+    const resourceId = new URLSearchParams(location.search).get('resource') ?? '';
+    if (!resourceId) {
+      handledResourceId.current = '';
+      return;
+    }
+    if (isLoading || handledResourceId.current === resourceId) return;
+
+    handledResourceId.current = resourceId;
+    const resource = books.find((book) => book._id === resourceId);
+    if (resource) {
+      setActiveTab('books');
+      setSelectedBook(resource);
+    }
+  }, [books, isLoading, location.search]);
 
   const activeSelectedBook = useMemo(() => {
     if (!selectedBook) return null;

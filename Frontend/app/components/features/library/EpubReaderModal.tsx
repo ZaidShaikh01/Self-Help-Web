@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Bookmark,
 } from 'lucide-react';
+import ModalLayer from '~/components/common/ModalLayer';
 import Skeleton from '~/components/ui/Skeleton';
 import { getBookAttachmentStreamUrl, type Resource } from '~/lib/library';
 
@@ -216,7 +217,7 @@ export default function EpubReaderModal({
     }
   };
 
-  // Keyboard navigation & close on Escape
+  // Keyboard navigation; Escape is handled by the shared modal layer.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
@@ -225,9 +226,6 @@ export default function EpubReaderModal({
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
         handlePrev();
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        handleClose();
       }
     };
 
@@ -256,12 +254,16 @@ export default function EpubReaderModal({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`EPUB Reader for ${book.title}`}
-      className="fixed inset-0 z-50 flex flex-col bg-[#FAF9F8] text-[#171A20]"
+    <ModalLayer
+      onClose={handleClose}
+      className="fixed inset-0 z-[10000] overflow-hidden bg-[#FAF9F8]"
     >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`EPUB Reader for ${book.title}`}
+        className="flex h-full w-full flex-col bg-[#FAF9F8] text-[#171A20]"
+      >
       {/* Top Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EEEEEE] bg-white px-4 py-2.5 shadow-sm">
         {/* Book Title & Chapter Info */}
@@ -379,6 +381,7 @@ export default function EpubReaderModal({
           className="w-full h-full max-w-4xl mx-auto px-4 sm:px-8 py-6 select-text"
         />
       </div>
-    </div>
+      </div>
+    </ModalLayer>
   );
 }

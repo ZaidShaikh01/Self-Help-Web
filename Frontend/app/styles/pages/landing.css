@@ -1392,17 +1392,33 @@ body {
     top: 58px;
     right: 0;
     left: 0;
-    display: none;
+    display: flex;
     align-items: stretch;
     flex-direction: column;
     gap: 4px;
     padding: 12px 16px 20px;
     border-bottom: 1px solid var(--landing-border);
     background: var(--landing-canvas);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transform-origin: top center;
+    transition:
+      opacity 180ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 180ms;
+    visibility: hidden;
   }
 
   .public-nav.is-open {
-    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition:
+      opacity 180ms ease,
+      transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s;
+    visibility: visible;
   }
 
   .public-nav > button {

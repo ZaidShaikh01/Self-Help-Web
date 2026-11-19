@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Bookmark,
 } from 'lucide-react';
+import ModalLayer from '~/components/common/ModalLayer';
 import type { Resource, ResourceStatus } from '~/lib/library';
 
 interface BookDetailModalProps {
@@ -70,17 +71,6 @@ export default function BookDetailModal({
       setAttachmentError(null);
     }
   }, [book]);
-
-  useEffect(() => {
-    if (!book) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isUpdatingProgress && !isUploadingAttachment) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [book, onClose, isUpdatingProgress, isUploadingAttachment]);
 
   if (!book) return null;
 
@@ -213,18 +203,16 @@ export default function BookDetailModal({
   };
 
   return (
-    <div
-      onClick={() => {
-        if (!isUpdatingProgress && !isUploadingAttachment) onClose();
-      }}
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+    <ModalLayer
+      canDismiss={!isUpdatingProgress && !isUploadingAttachment}
+      onClose={onClose}
+      className="fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/40 backdrop-blur-sm p-4"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="book-detail-title"
-        onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-[#EEEEEE] max-h-[90vh] overflow-y-auto"
+        className="max-h-[90vh] w-full max-w-lg space-y-5 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl"
       >
         {/* Top Header */}
         <div className="flex justify-between items-start gap-4">
@@ -552,6 +540,6 @@ export default function BookDetailModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalLayer>
   );
 }

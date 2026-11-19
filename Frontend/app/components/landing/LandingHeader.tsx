@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 
 interface LandingHeaderProps {
@@ -17,6 +18,36 @@ export default function LandingHeader({
   onCloseMenu,
   onScrollTo,
 }: LandingHeaderProps) {
+  const navRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        !navRef.current?.contains(target) &&
+        !menuButtonRef.current?.contains(target)
+      ) {
+        onCloseMenu();
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCloseMenu();
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuOpen, onCloseMenu]);
+
   return (
     <header className={`public-header ${scrolled ? 'is-scrolled' : ''}`}>
       <Link
@@ -36,6 +67,8 @@ export default function LandingHeader({
       </Link>
 
       <nav
+        ref={navRef}
+        id="public-navigation"
         className={`public-nav ${menuOpen ? 'is-open' : ''}`}
         aria-label="Public navigation"
       >
@@ -71,11 +104,23 @@ export default function LandingHeader({
       </nav>
 
       <button
+        ref={menuButtonRef}
         type="button"
         className="public-menu"
         onClick={onToggleMenu}
         aria-expanded={menuOpen}
+        aria-controls="public-navigation"
         aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+        onKeyDown={(event) => {
+          if (event.key !== 'ArrowDown') return;
+          event.preventDefault();
+          if (!menuOpen) onToggleMenu();
+          requestAnimationFrame(() =>
+            navRef.current
+              ?.querySelector<HTMLElement>('button, a[href]')
+              ?.focus(),
+          );
+        }}
       >
         <span
           className={`menu-icon ${menuOpen ? 'is-open' : ''}`}

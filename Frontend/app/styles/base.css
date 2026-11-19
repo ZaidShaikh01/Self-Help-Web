@@ -98,6 +98,42 @@ button {
   background: transparent;
 }
 
+button:not(:disabled),
+a[href]:not(.skip-link),
+[role='button'] {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    translate 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    scale 140ms ease;
+}
+
+@media (hover: hover) {
+  button:not(:disabled):hover,
+  a[href]:not(.skip-link):hover,
+  [role='button']:hover {
+    translate: 0 -1px;
+  }
+}
+
+button:not(:disabled):active,
+a[href]:not(.skip-link):active,
+[role='button']:active {
+  translate: 0 0;
+  scale: 0.985;
+}
+
+input,
+textarea,
+select {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,

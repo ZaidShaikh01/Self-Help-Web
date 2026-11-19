@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import { Icon } from '~/components/ui/Icon';
 import Skeleton from '~/components/ui/Skeleton';
+import ModalLayer from '~/components/common/ModalLayer';
 import { useHabitStats, type HabitStatsRange } from '~/hooks/useHabitStats';
 import type { Habit } from '~/lib/habits';
 
@@ -40,15 +40,6 @@ export default function HabitHistoryModal({
 }: HabitHistoryModalProps) {
   const { stats, range, setRange, isLoading, error } = useHabitStats(habit._id);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
   const completionPercent = stats
     ? Math.round(stats.completionRate * 100)
     : 0;
@@ -56,11 +47,9 @@ export default function HabitHistoryModal({
   const days = stats ? [...stats.days].reverse() : [];
 
   return (
-    <div
-      className="fixed inset-0 z-[110] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+    <ModalLayer
+      onClose={onClose}
+      className="fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
     >
       <section
         role="dialog"
@@ -321,6 +310,6 @@ export default function HabitHistoryModal({
           </div>
         ) : null}
       </section>
-    </div>
+    </ModalLayer>
   );
 }

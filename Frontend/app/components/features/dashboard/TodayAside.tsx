@@ -1,24 +1,34 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import MetricProgressCard from '~/components/common/MetricCard';
+import { countActivityByDate } from '~/components/features/activity/activityMath';
+import type { GrowthActivityEvent } from '~/components/features/activity/types';
+import { toLocalDateInput } from '~/components/features/journal/journalUtils';
 
 interface TodayAsideProps {
   completed: number;
   total: number;
+  events: GrowthActivityEvent[];
+  isActivityLoading: boolean;
+  activityError: string;
+  onRetryActivity: () => void;
+  nextPractice?: string;
 }
 
-const ACTIVITY_COUNTS = [1, 3, 1, 4, 0, 3, 4];
-
-function getWeekActivity() {
+function getWeekActivity(events: GrowthActivityEvent[]) {
   const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const activityByDate = countActivityByDate(events);
 
-  return ACTIVITY_COUNTS.map((events, index) => {
+  return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today);
-    date.setDate(today.getDate() - (ACTIVITY_COUNTS.length - index - 1));
+    date.setDate(today.getDate() - (6 - index));
+    const dateKey = toLocalDateInput(date);
 
     return {
       date,
-      events,
+      dateKey,
+      events: activityByDate.get(dateKey) ?? 0,
       label: date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
       longDate: date.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -29,53 +39,87 @@ function getWeekActivity() {
   });
 }
 
-function WeekActivity() {
-  const days = useMemo(getWeekActivity, []);
+function WeekActivity({
+  events,
+  isActivityLoading: isLoading,
+  activityError: error,
+  onRetryActivity,
+}: Pick<
+  TodayAsideProps,
+  'events' | 'isActivityLoading' | 'activityError' | 'onRetryActivity'
+>) {
+  const days = useMemo(() => getWeekActivity(events), [events]);
   const [selected, setSelected] = useState(days.length - 1);
   const activeDay = days[selected];
+  const peak = Math.max(1, ...days.map((day) => day.events));
 
   return (
     <div className="today-week-activity">
-      <div
-        className="today-week-activity__bars"
-        role="group"
-        aria-label="Activity for the last seven days"
-      >
-        {days.map((day, index) => (
-          <button
-            type="button"
-            key={day.date.toISOString()}
-            aria-label={`${day.longDate}: ${day.events} recorded ${day.events === 1 ? 'event' : 'events'}`}
-            aria-pressed={selected === index}
-            className={`today-week-activity__day${selected === index ? ' is-selected' : ''}`}
-            onClick={() => setSelected(index)}
+      {error ? (
+        <div className="today-week-activity__message" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={onRetryActivity}>Retry</button>
+        </div>
+      ) : (
+        <>
+          <div
+            className="today-week-activity__bars"
+            role="group"
+            aria-label="Activity for the last seven days"
           >
-            <span style={{ height: `${Math.max(8, day.events * 5)}px` }} />
-          </button>
-        ))}
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={days.length - 1}
-        value={selected}
-        aria-label="Choose a day in your activity history"
-        onChange={(event) => setSelected(Number(event.target.value))}
-      />
-      <div className="today-week-activity__selected">
-        <span>{activeDay.longDate}</span>
-        <strong>{activeDay.events} RECORDED EVENTS</strong>
-        <small>HABIT</small>
-        <Link to="/timeline">VIEW TIMELINE</Link>
-      </div>
+            {days.map((day, index) => (
+              <button
+                type="button"
+                key={day.dateKey}
+                aria-label={`${day.longDate}: ${day.events} recorded ${day.events === 1 ? 'action' : 'actions'}`}
+                aria-pressed={selected === index}
+                className={`today-week-activity__day${selected === index ? ' is-selected' : ''}`}
+                disabled={isLoading}
+                onClick={() => setSelected(index)}
+              >
+                <span
+                  style={{
+                    height: `${day.events ? Math.max(5, (day.events / peak) * 28) : 2}px`,
+                  }}
+                />
+              </button>
+            ))}
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={days.length - 1}
+            value={selected}
+            aria-label="Choose a day in your activity history"
+            disabled={isLoading}
+            onChange={(event) => setSelected(Number(event.target.value))}
+          />
+          <div className="today-week-activity__selected">
+            <span>{activeDay.longDate}</span>
+            <strong>
+              {isLoading ? 'LOADING ACTIVITY' : `${activeDay.events} RECORDED ${activeDay.events === 1 ? 'ACTION' : 'ACTIONS'}`}
+            </strong>
+            <small>HISTORY</small>
+            <Link to={`/timeline?date=${encodeURIComponent(activeDay.dateKey)}`}>
+              VIEW TIMELINE
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-export default function TodayAside({ completed, total }: TodayAsideProps) {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const milestoneDate = yesterday
+export default function TodayAside({
+  completed,
+  total,
+  events,
+  isActivityLoading,
+  activityError,
+  onRetryActivity,
+  nextPractice,
+}: TodayAsideProps) {
+  const todayLabel = new Date()
     .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     .toUpperCase();
 
@@ -87,34 +131,43 @@ export default function TodayAside({ completed, total }: TodayAsideProps) {
         description="No perfect day required. Your history is made one useful action at a time."
         className="today-rhythm-card"
       >
-        <WeekActivity />
+        <WeekActivity
+          events={events}
+          isActivityLoading={isActivityLoading}
+          activityError={activityError}
+          onRetryActivity={onRetryActivity}
+        />
       </MetricProgressCard>
 
       <section className="today-upcoming" aria-labelledby="today-upcoming-title">
         <div className="today-section-heading">
           <span>[04]</span>
-          <h2 id="today-upcoming-title">COMING UP</h2>
+          <h2 id="today-upcoming-title">NEXT STEP</h2>
         </div>
-        <div className="today-upcoming__item">
-          <time>4:30 PM</time>
+        <div className="today-upcoming__item is-dynamic">
+          <span className="today-upcoming__marker" aria-hidden="true" />
           <div>
-            <strong>Focused study</strong>
-            <span>45 minute session</span>
+            <strong>{nextPractice || (total ? 'All practices complete' : 'Start a practice')}</strong>
+            <span>
+              {nextPractice
+                ? 'A habit scheduled for today'
+                : total
+                  ? 'You showed up for today’s plan'
+                  : 'Add a habit to begin tracking'}
+            </span>
           </div>
-        </div>
-        <div className="today-upcoming__item">
-          <time>8:00 PM</time>
-          <div>
-            <strong>Daily reflection</strong>
-            <span>A quiet prompt</span>
-          </div>
+          <Link to="/habits">{total ? 'HABITS' : 'ADD'}</Link>
         </div>
       </section>
 
       <section className="today-milestone" aria-label="Recent milestone">
-        <span>MILESTONE · {milestoneDate}</span>
-        <strong>Four practices, one steady week.</strong>
-        <Link to="/habits">VIEW HABITS</Link>
+        <span>TODAY · {todayLabel}</span>
+        <strong>
+          {total
+            ? `${completed} of ${total} scheduled ${total === 1 ? 'practice' : 'practices'} completed.`
+            : 'Your next small step can start here.'}
+        </strong>
+        <Link to="/insights">VIEW INSIGHTS</Link>
       </section>
     </aside>
   );

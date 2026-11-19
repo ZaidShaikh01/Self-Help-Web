@@ -19,6 +19,9 @@ export default [
     route('dashboard', 'routes/dashboard.tsx'),
     route('habits', 'routes/habits.tsx'),
     route('library', 'routes/library.tsx'),
+    route('journal/*', 'routes/journal.tsx'),
+    route('timeline', 'routes/timeline.tsx'),
+    route('insights', 'routes/insights.tsx'),
 
     // Existing fallback for unfinished features.
     route('*', 'components/ComingSoon.tsx'),

@@ -44,6 +44,7 @@ export default function Header({
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const resolvedSection = section ?? resolveSection(pathname);
 
@@ -59,19 +60,55 @@ export default function Header({
     return () => window.removeEventListener('keydown', handler);
   }, [onSearch]);
 
-  // Close mobile dropdown menu on outside click or Escape
+  // Close the account menu on outside click or Escape and support menu keys.
   useEffect(() => {
     if (!menuOpen) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+
+      if (
+        !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key) ||
+        !menuRef.current?.contains(document.activeElement)
+      ) {
+        return;
+      }
+
+      const items = menuRef.current.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]',
+      );
+      if (items.length === 0) return;
+
+      const currentIndex = Array.from(items).indexOf(
+        document.activeElement as HTMLButtonElement,
+      );
+      const nextIndex =
+        e.key === 'Home'
+          ? 0
+          : e.key === 'End'
+            ? items.length - 1
+            : currentIndex < 0
+              ? e.key === 'ArrowDown'
+                ? 0
+                : items.length - 1
+              : (currentIndex +
+                  (e.key === 'ArrowDown' ? 1 : -1) +
+                  items.length) %
+                items.length;
+
+      e.preventDefault();
+      items[nextIndex].focus();
     };
-    document.addEventListener('mousedown', onDown);
+    document.addEventListener('pointerdown', onDown);
     document.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('pointerdown', onDown);
       document.removeEventListener('keydown', onKey);
     };
   }, [menuOpen]);
@@ -180,10 +217,24 @@ export default function Header({
         {/* User Avatar & Dropdown Menu */}
         <div ref={menuRef} className="relative">
           <button
+            ref={menuButtonRef}
             type="button"
             aria-label="Account menu"
             aria-haspopup="menu"
+            aria-controls="account-menu"
             aria-expanded={menuOpen}
+            onKeyDown={(event) => {
+              if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+              event.preventDefault();
+              setMenuOpen(true);
+              requestAnimationFrame(() => {
+                const items = menuRef.current?.querySelectorAll<HTMLButtonElement>(
+                  '[role="menuitem"]',
+                );
+                const index = event.key === 'ArrowDown' ? 0 : (items?.length ?? 1) - 1;
+                items?.[index]?.focus();
+              });
+            }}
             onClick={() => setMenuOpen((open) => !open)}
             className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-[var(--granite-strong)] font-sans text-xs font-semibold text-[var(--surface)] transition-transform hover:scale-105"
           >
@@ -192,8 +243,9 @@ export default function Header({
 
           {menuOpen && (
             <div
+              id="account-menu"
               role="menu"
-              className="absolute right-0 top-full z-40 mt-2 w-48 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
+              className="account-menu absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-lg"
             >
               <button
                 type="button"

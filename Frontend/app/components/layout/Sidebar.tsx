@@ -325,30 +325,18 @@ export default function Sidebar({
                     : 'w-full px-3 py-2 text-[11px] tracking-wider'
                 } ${
                   isActive
-                    ? 'bg-transparent text-[var(--accent)] font-semibold border-transparent'
+                    ? 'is-active bg-transparent text-[var(--accent)] font-semibold border-transparent'
                     : 'text-[var(--text-2)] hover:bg-[var(--surface)] hover:text-[var(--text)]'
                 }`
               }
             >
-              {({ isActive }) => (
+              <Icon name={icon} size={collapsed ? 17 : 18} />
+              {collapsed ? null : (
                 <>
-                  {isActive && (
-                    <span
-                      className={`absolute ${
-                        collapsed ? 'left-0' : '-left-1'
-                      } top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-[var(--accent)]`}
-                      aria-hidden="true"
-                    />
-                  )}
-                  <Icon name={icon} size={collapsed ? 17 : 18} />
-                  {collapsed ? null : (
-                    <>
-                      <span className="ml-2.5 flex-1 text-left">{label}</span>
-                      <span className="text-[9px] text-[var(--text-3)] font-mono">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                    </>
-                  )}
+                  <span className="ml-2.5 flex-1 text-left">{label}</span>
+                  <span className="text-[9px] text-[var(--text-3)] font-mono">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                 </>
               )}
             </NavLink>

@@ -1,9 +1,13 @@
 import { Grid2X2, List, Search } from 'lucide-react';
-import type { ResourceCategory, ResourceType } from '~/lib/library';
+import type {
+  ResourceCategory,
+  ResourceStatus,
+  ResourceType,
+} from '~/lib/library';
 
 export type ActiveLibraryTab = 'books' | 'notes';
 export type CategoryFilter = 'All' | ResourceCategory;
-export type LibraryStatusFilter = 'all' | 'In Progress' | 'Completed';
+export type LibraryStatusFilter = 'all' | ResourceStatus;
 export type LibraryViewMode = 'grid' | 'list';
 export type LibraryTypeFilter = 'All Types' | ResourceType;
 
@@ -68,7 +72,7 @@ export default function LibraryToolbar({
             </select>
           </label>
 
-          {(['In Progress', 'Completed'] as const).map((status) => (
+          {(['Plan to Do', 'In Progress', 'Completed'] as const).map((status) => (
             <button
               key={status}
               type="button"
