@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, BookOpen, FileText, ChevronDown } from 'lucide-react';
 import ModalLayer from './ModalLayer';
+import type { ResourceType } from '~/lib/library';
 
 // ==========================================
 // TYPES & INTERFACES
@@ -13,6 +14,15 @@ export interface NewBookData {
   author: string;
   category: BookCategory;
   pages: number;
+}
+
+export interface NewResourceData {
+  title: string;
+  type: ResourceType;
+  author?: string;
+  link?: string;
+  category?: BookCategory;
+  pages?: number;
 }
 
 export interface NewNoteData {
@@ -32,6 +42,7 @@ interface AddModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveBook?: (data: NewBookData) => void | Promise<void>;
+  onSaveResource?: (data: NewResourceData) => void | Promise<void>;
   onSaveNote?: (data: NewNoteData) => void | Promise<void>;
   defaultTab?: EntryType;
   availableBooks?: AvailableBookOption[];
@@ -42,6 +53,12 @@ const CATEGORIES: BookCategory[] = [
   'Focus',
   'Finance',
   'Philosophy',
+];
+const RESOURCE_TYPES: ResourceType[] = [
+  'Book',
+  'Article',
+  'YouTube',
+  'Documentary',
 ];
 
 // ==========================================
@@ -81,6 +98,7 @@ const AddModal: React.FC<AddModalProps> = ({
   isOpen,
   onClose,
   onSaveBook,
+  onSaveResource,
   onSaveNote,
   defaultTab = 'book',
   availableBooks = [],
@@ -89,7 +107,9 @@ const AddModal: React.FC<AddModalProps> = ({
 
   // Book form
   const [bookTitle, setBookTitle] = useState('');
+  const [resourceType, setResourceType] = useState<ResourceType>('Book');
   const [bookAuthor, setBookAuthor] = useState('');
+  const [resourceLink, setResourceLink] = useState('');
   const [bookCategory, setBookCategory] =
     useState<BookCategory>('Productivity');
   const [bookPages, setBookPages] = useState<number>(300);
@@ -117,7 +137,9 @@ const AddModal: React.FC<AddModalProps> = ({
 
   const resetForms = () => {
     setBookTitle('');
+    setResourceType('Book');
     setBookAuthor('');
+    setResourceLink('');
     setBookCategory('Productivity');
     setBookPages(300);
     setNoteBookTitle('');
@@ -143,18 +165,34 @@ const AddModal: React.FC<AddModalProps> = ({
 
     try {
       if (activeTab === 'book') {
-        if (!bookTitle.trim() || !bookAuthor.trim()) {
-          setSubmitError('Please enter both a book title and author.');
+        if (!bookTitle.trim()) {
+          setSubmitError('Please enter a resource title.');
           setIsSubmitting(false);
           return;
         }
 
-        await onSaveBook?.({
+        const resourceData: NewResourceData = {
           title: bookTitle.trim(),
-          author: bookAuthor.trim(),
-          category: bookCategory,
-          pages: Number(bookPages) || 1,
-        });
+          type: resourceType,
+          author: bookAuthor.trim() || undefined,
+          link: resourceLink.trim() || undefined,
+          ...(resourceType === 'Book'
+            ? {
+                category: bookCategory,
+                pages: Number(bookPages) || 1,
+              }
+            : {}),
+        };
+        if (onSaveResource) {
+          await onSaveResource(resourceData);
+        } else if (resourceType === 'Book') {
+          await onSaveBook?.({
+            title: resourceData.title,
+            author: resourceData.author ?? '',
+            category: resourceData.category ?? 'Productivity',
+            pages: resourceData.pages ?? 1,
+          });
+        }
       } else {
         if (!noteQuote.trim() && !noteReflection.trim()) {
           setSubmitError('Please provide a favorite quote or personal reflection.');
@@ -253,7 +291,7 @@ const AddModal: React.FC<AddModalProps> = ({
                 }}
                 className={tabCls('book')}
               >
-                <BookOpen className="h-3.5 w-3.5" /> New book
+                <BookOpen className="h-3.5 w-3.5" /> New resource
               </button>
               <button
                 type="button"
@@ -269,21 +307,37 @@ const AddModal: React.FC<AddModalProps> = ({
 
             {activeTab === 'book' ? (
               <>
-                <Field label="Book title" hint="Required">
+                <Field label="Resource type" hint="Required">
+                  <div className="relative">
+                    <select
+                      value={resourceType}
+                      onChange={(event) =>
+                        setResourceType(event.target.value as ResourceType)
+                      }
+                      className={`${inputCls} cursor-pointer appearance-none pr-10`}
+                    >
+                      {RESOURCE_TYPES.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text)]" />
+                  </div>
+                </Field>
+
+                <Field label="Resource title" hint="Required">
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Atomic Habits"
+                    placeholder="e.g. Atomic Habits or an article title"
                     value={bookTitle}
                     onChange={(e) => setBookTitle(e.target.value)}
                     className={inputCls}
                   />
                 </Field>
 
-                <Field label="Author" hint="Required">
+                <Field label="Author / creator" hint="Optional">
                   <input
                     type="text"
-                    required
                     placeholder="e.g. James Clear"
                     value={bookAuthor}
                     onChange={(e) => setBookAuthor(e.target.value)}
@@ -291,36 +345,45 @@ const AddModal: React.FC<AddModalProps> = ({
                   />
                 </Field>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-3.5">
-                  <Field label="Category">
-                    <div className="relative">
-                      <select
-                        value={bookCategory}
-                        onChange={(e) =>
-                          setBookCategory(e.target.value as BookCategory)
-                        }
-                        className={`${inputCls} cursor-pointer appearance-none pr-10`}
-                      >
-                        {CATEGORIES.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text)]" />
-                    </div>
-                  </Field>
+                <Field label="Link" hint="Optional">
+                  <input
+                    type="url"
+                    placeholder="https://…"
+                    value={resourceLink}
+                    onChange={(e) => setResourceLink(e.target.value)}
+                    className={inputCls}
+                  />
+                </Field>
 
-                  <Field label="Total pages">
-                    <input
-                      type="number"
-                      min={1}
-                      value={bookPages}
-                      onChange={(e) => setBookPages(Number(e.target.value))}
-                      className={inputCls}
-                    />
-                  </Field>
-                </div>
+                {resourceType === 'Book' && (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-3.5">
+                    <Field label="Category">
+                      <div className="relative">
+                        <select
+                          value={bookCategory}
+                          onChange={(e) =>
+                            setBookCategory(e.target.value as BookCategory)
+                          }
+                          className={`${inputCls} cursor-pointer appearance-none pr-10`}
+                        >
+                          {CATEGORIES.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--text)]" />
+                      </div>
+                    </Field>
+                    <Field label="Total pages">
+                      <input
+                        type="number"
+                        min={1}
+                        value={bookPages}
+                        onChange={(e) => setBookPages(Number(e.target.value))}
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -411,7 +474,7 @@ const AddModal: React.FC<AddModalProps> = ({
               >
                 {isSubmitting
                   ? 'Saving…'
-                  : `Save ${activeTab === 'book' ? 'book' : 'note'}`}
+                  : `Save ${activeTab === 'book' ? 'resource' : 'note'}`}
               </button>
             </div>
           </div>

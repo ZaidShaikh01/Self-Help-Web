@@ -4,7 +4,9 @@ import { Plus, RefreshCw } from 'lucide-react';
 import AddModal, {
   type NewBookData,
   type NewNoteData,
+  type NewResourceData,
 } from '~/components/common/AddModal';
+import ConfirmDialog from '~/components/common/ConfirmDialog';
 import BookDetailModal from '~/components/features/library/BookDetailModal';
 import BookGrid from '~/components/features/library/BookGrid';
 import EditBookModal from '~/components/features/library/EditBookModal';
@@ -22,6 +24,7 @@ import PdfReaderModal from '~/components/features/library/PdfReaderModal';
 import { DEMO_BOOKS } from '~/components/features/library/demoLibrary';
 import Skeleton from '~/components/ui/Skeleton';
 import { useLibrary } from '~/hooks/useLibrary';
+import { fetchResourceById } from '~/lib/library';
 import type {
   Note,
   Resource,
@@ -66,15 +69,38 @@ export default function Library() {
   const [readingBook, setReadingBook] = useState<Resource | null>(null);
   const [readerType, setReaderType] = useState<'pdf' | 'epub' | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [resourceLookupError, setResourceLookupError] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<
+    { type: 'book'; item: Resource } | { type: 'note'; item: Note } | null
+  >(null);
   const handledResourceId = useRef('');
 
   useEffect(() => {
-    const state = location.state as { focusSearch?: boolean } | null;
-    if (!state?.focusSearch) return;
+    const state = location.state as
+      | { openQuickCaptureResource?: boolean }
+      | null;
+    if (!state?.openQuickCaptureResource) return;
 
-    document.getElementById('library-search-input')?.focus();
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.key, location.pathname, location.state, navigate]);
+    setActiveTab('books');
+    setIsAddModalOpen(true);
+    navigate(`${location.pathname}${location.search}`, {
+      replace: true,
+      state: null,
+    });
+  }, [
+    location.key,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+  ]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'notes') setActiveTab('notes');
+    const queryParam = params.get('query');
+    if (queryParam !== null) setSearchQuery(queryParam);
+  }, [location.search]);
 
   const {
     books,
@@ -82,7 +108,9 @@ export default function Library() {
     isLoading,
     error,
     reload,
+    searchNotes,
     addBook,
+    addResource,
     updateBook,
     toggleBookPin,
     updateBookProgress,
@@ -96,6 +124,11 @@ export default function Library() {
   } = useLibrary();
 
   useEffect(() => {
+    const queryParam = new URLSearchParams(location.search).get('query');
+    if (queryParam && !isLoading) void searchNotes(queryParam);
+  }, [isLoading, location.search, searchNotes]);
+
+  useEffect(() => {
     const resourceId = new URLSearchParams(location.search).get('resource') ?? '';
     if (!resourceId) {
       handledResourceId.current = '';
@@ -104,19 +137,33 @@ export default function Library() {
     if (isLoading || handledResourceId.current === resourceId) return;
 
     handledResourceId.current = resourceId;
+    setResourceLookupError('');
     const resource = books.find((book) => book._id === resourceId);
     if (resource) {
       setActiveTab('books');
       setSelectedBook(resource);
+    } else {
+      void fetchResourceById(resourceId)
+        .then((fetchedResource) => {
+          if (handledResourceId.current === resourceId) {
+            setActiveTab('books');
+            setSelectedBook(fetchedResource);
+          }
+        })
+        .catch((caught: unknown) => {
+          if (handledResourceId.current !== resourceId) return;
+          setResourceLookupError(
+            caught instanceof Error
+              ? caught.message
+              : 'This resource could not be opened.',
+          );
+        });
     }
   }, [books, isLoading, location.search]);
 
   const activeSelectedBook = useMemo(() => {
     if (!selectedBook) return null;
-    return (
-      books.find((b) => b._id === selectedBook._id) ||
-      (selectedBook._id.startsWith('demo-') ? selectedBook : null)
-    );
+    return books.find((b) => b._id === selectedBook._id) || selectedBook;
   }, [books, selectedBook]);
 
   const activeReadingBook = useMemo(() => {
@@ -174,6 +221,10 @@ export default function Library() {
     await addBook(data);
   };
 
+  const handleSaveResource = async (data: NewResourceData) => {
+    await addResource(data);
+  };
+
   const handleSaveNote = async (data: NewNoteData) => {
     await addNote(data);
   };
@@ -196,6 +247,7 @@ export default function Library() {
 
   const closeBookDetails = () => {
     setSelectedBook(null);
+    setResourceLookupError('');
     handledResourceId.current = '';
     const params = new URLSearchParams(location.search);
     if (params.has('resource')) {
@@ -226,18 +278,8 @@ export default function Library() {
     await updateBook(id, data);
   };
 
-  const handleDeleteBook = async (book: Resource) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${book.title}"?\n\nNote: Any linked notes and reflections will not be deleted, but will no longer be linked to this book.`,
-    );
-    if (!confirmed) return;
-
-    try {
-      await deleteBook(book._id);
-      closeBookDetails();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete book.');
-    }
+  const handleDeleteBook = (book: Resource) => {
+    setDeleteTarget({ type: 'book', item: book });
   };
 
   const handleSaveEditedNote = async (
@@ -253,21 +295,21 @@ export default function Library() {
     await updateExistingNote(id, data);
   };
 
-  const handleDeleteNote = async (note: Note) => {
-    const title =
-      note.resource && typeof note.resource === 'object' && note.resource.title
-        ? note.resource.title
-        : note.title || 'Personal Reflection';
-    const confirmed = window.confirm(
-      `Are you sure you want to delete this note for "${title}"?`,
-    );
-    if (!confirmed) return;
+  const handleDeleteNote = (note: Note) => {
+    setDeleteTarget({ type: 'note', item: note });
+  };
 
-    try {
-      await deleteExistingNote(note._id);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete note.');
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === 'book') {
+      await deleteBook(deleteTarget.item._id);
+      closeBookDetails();
+    } else {
+      await deleteExistingNote(deleteTarget.item._id);
     }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -313,6 +355,11 @@ export default function Library() {
             Retry
           </button>
         </div>
+      )}
+      {resourceLookupError && (
+        <p className="library-error" role="alert">
+          {resourceLookupError}
+        </p>
       )}
 
       <LibraryToolbar
@@ -475,9 +522,31 @@ export default function Library() {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onSaveBook={handleSaveBook}
+          onSaveResource={handleSaveResource}
           onSaveNote={handleSaveNote}
           defaultTab={activeTab === 'books' ? 'book' : 'note'}
           availableBooks={availableBookOptions}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title={deleteTarget.type === 'book' ? 'Delete resource?' : 'Delete note?'}
+          description={
+            deleteTarget.type === 'book'
+              ? `Are you sure you want to delete "${deleteTarget.item.title}"? Any linked notes and reflections will stay saved, but will no longer be linked to this resource.`
+              : `Are you sure you want to delete this note for "${
+                  deleteTarget.item.resource &&
+                  typeof deleteTarget.item.resource === 'object' &&
+                  deleteTarget.item.resource.title
+                    ? deleteTarget.item.resource.title
+                    : deleteTarget.item.title || 'Personal Reflection'
+                }"? This cannot be undone.`
+          }
+          confirmLabel="Delete"
+          tone="danger"
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmDelete}
         />
       )}
     </div>

@@ -20,8 +20,11 @@ export default [
     route('habits', 'routes/habits.tsx'),
     route('library', 'routes/library.tsx'),
     route('journal/*', 'routes/journal.tsx'),
+    route('expenses', 'routes/expenses.tsx'),
+    route('games', 'routes/games.tsx'),
     route('timeline', 'routes/timeline.tsx'),
     route('insights', 'routes/insights.tsx'),
+    route('notifications', 'routes/notifications.tsx'),
 
     // Existing fallback for unfinished features.
     route('*', 'components/ComingSoon.tsx'),

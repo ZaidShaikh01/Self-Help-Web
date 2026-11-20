@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Pin } from 'lucide-react';
+import ConfirmDialog from '~/components/common/ConfirmDialog';
 import { Icon } from '~/components/ui/Icon';
 import type { Habit, TodayHabit } from '~/lib/habits';
 import type { ProgressChange } from '~/hooks/useHabits';
@@ -16,7 +18,7 @@ interface HabitRowProps {
   onManage: (
     habit: Habit,
     action: 'archive' | 'restore' | 'delete',
-  ) => void;
+  ) => void | Promise<void>;
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -43,6 +45,9 @@ export default function HabitRow({
   onAdjustProgress,
   onManage,
 }: HabitRowProps) {
+  const [confirmAction, setConfirmAction] = useState<'archive' | 'delete' | null>(
+    null,
+  );
   const isDueToday = Boolean(todayRecord) && !showArchived;
   const isCompleted = todayRecord?.completed ?? false;
 
@@ -56,17 +61,12 @@ export default function HabitRow({
     : 0;
 
   function handleManage(action: 'archive' | 'restore' | 'delete') {
-    const messages = {
-      archive: `Archive "${habit.title}"?`,
-      restore: `Restore "${habit.title}"?`,
-      delete: `Permanently delete "${habit.title}" and its progress history? This cannot be undone.`,
-    };
-
-    if (action !== 'restore' && !window.confirm(messages[action])) {
+    if (action === 'restore') {
+      void onManage(habit, action);
       return;
     }
 
-    onManage(habit, action);
+    setConfirmAction(action);
   }
 
   return (
@@ -191,7 +191,7 @@ export default function HabitRow({
               type="button"
               disabled={isUpdating}
               onClick={() => handleManage('delete')}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-red-600 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-soft)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--danger-text)] transition-colors hover:border-[var(--danger-fill)] hover:bg-[var(--danger-fill)] hover:text-[var(--on-danger)] disabled:opacity-50"
             >
               <Icon name="close" size={14} />
               Delete
@@ -213,7 +213,7 @@ export default function HabitRow({
               type="button"
               disabled={isUpdating}
               onClick={() => handleManage('archive')}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--text-2)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--success-border)] bg-[var(--success-soft)] px-2.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[var(--success-text)] transition-colors hover:border-[var(--success-text)] disabled:opacity-50"
             >
               <Icon name="archive" size={14} />
               Archive
@@ -270,6 +270,20 @@ export default function HabitRow({
           </>
         )}
       </div>
+      {confirmAction && (
+        <ConfirmDialog
+          title={confirmAction === 'archive' ? 'Archive habit?' : 'Delete habit?'}
+          description={
+            confirmAction === 'archive'
+              ? `Archive "${habit.title}"? You can restore it later.`
+              : `Permanently delete "${habit.title}" and its progress history? This cannot be undone.`
+          }
+          confirmLabel={confirmAction === 'archive' ? 'Archive' : 'Delete'}
+          tone={confirmAction === 'delete' ? 'danger' : 'success'}
+          onClose={() => setConfirmAction(null)}
+          onConfirm={() => onManage(habit, confirmAction)}
+        />
+      )}
     </article>
   );
 }

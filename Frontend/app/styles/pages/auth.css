@@ -261,6 +261,16 @@
 .auth-error strong { font-weight: 600; }
 .auth-error span { overflow-wrap: anywhere; }
 
+.auth-notice {
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  border: 1px solid var(--auth-border);
+  background: var(--auth-surface);
+  color: var(--auth-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .auth-field {
   display: block;
   margin-top: 16px;

@@ -4,8 +4,6 @@ import { Pin } from 'lucide-react';
 import { logoutRequest } from '~/lib/auth';
 import { ApiRequestError } from '~/lib/api';
 import { Icon } from '~/components/ui/Icon';
-import { IconButton } from '~/components/ui/Button';
-import PinnedItemsDialog from '~/components/features/pinned/PinnedItemsDialog';
 
 export interface HeaderProps {
   section?: string;
@@ -15,6 +13,7 @@ export interface HeaderProps {
   onSearch?: () => void;
   onCreate?: () => void;
   onNotifications?: () => void;
+  onPinnedItems?: () => void;
   onToggleTheme?: () => void;
   dark?: boolean;
   dashboardMode?: boolean;
@@ -22,6 +21,7 @@ export interface HeaderProps {
 
 function resolveSection(pathname: string): string {
   if (pathname.startsWith('/habits')) return 'HABITS';
+  if (pathname.startsWith('/notifications')) return 'NOTIFICATIONS';
   if (pathname.startsWith('/library')) return 'LIBRARY';
   if (pathname.startsWith('/journal')) return 'JOURNAL';
   if (pathname.startsWith('/timeline')) return 'TIMELINE';
@@ -33,11 +33,12 @@ function resolveSection(pathname: string): string {
 export default function Header({
   section,
   scope = 'GROWTH OS',
-  hasUnread = true,
+  hasUnread = false,
   user = { initial: 'A' },
   onSearch = () => {},
   onCreate = () => {},
   onNotifications = () => {},
+  onPinnedItems = () => {},
   onToggleTheme = () => {},
   dark = false,
   dashboardMode = false,
@@ -45,7 +46,7 @@ export default function Header({
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [pinnedDialogOpen, setPinnedDialogOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -118,6 +119,7 @@ export default function Header({
 
   const handleLogout = async () => {
     setMenuOpen(false);
+    setLogoutError('');
     try {
       await logoutRequest();
       navigate('/login', { replace: true });
@@ -127,7 +129,7 @@ export default function Header({
         return;
       }
       console.error('Logout failed:', error);
-      window.alert('Logout could not be completed. Please try again.');
+      setLogoutError('Sign out could not be completed. Please try again.');
     }
   };
 
@@ -146,14 +148,14 @@ export default function Header({
         <button
           type="button"
           onClick={onSearch}
-          aria-label={`${dashboardMode ? 'Search anything' : 'Search'} (⌘K)`}
+          aria-label="Search everything (⌘K)"
           className={`hidden h-9 w-44 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 text-[10px] uppercase tracking-wider text-[var(--text-3)] transition-colors hover:border-[var(--border-strong)] hover:text-[var(--text)] lg:flex ${
             dashboardMode ? 'today-toolbar-search' : 'xl:w-56'
           }`}
         >
           <Icon name="search" size={15} />
           <span className="flex-1 text-left">
-            {dashboardMode ? 'Search anything' : 'Search…'}
+            Search everything
           </span>
           <kbd className="text-[9px]">⌘K</kbd>
         </button>
@@ -179,7 +181,7 @@ export default function Header({
 
         <button
           type="button"
-          onClick={() => setPinnedDialogOpen(true)}
+          onClick={onPinnedItems}
           aria-label="Open pinned items"
           title="Pinned items"
           className="icon-button"
@@ -296,8 +298,21 @@ export default function Header({
           )}
         </div>
       </div>
-      {pinnedDialogOpen && (
-        <PinnedItemsDialog onClose={() => setPinnedDialogOpen(false)} />
+      {logoutError && (
+        <div
+          className="fixed right-4 top-16 z-[100] flex max-w-sm items-start gap-3 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-xs text-[var(--danger-text)] shadow-lg"
+          role="alert"
+        >
+          <span>{logoutError}</span>
+          <button
+            type="button"
+            className="font-mono text-sm leading-none"
+            aria-label="Dismiss sign out error"
+            onClick={() => setLogoutError('')}
+          >
+            ×
+          </button>
+        </div>
       )}
     </header>
   );

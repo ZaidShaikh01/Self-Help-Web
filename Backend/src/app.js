@@ -93,6 +93,14 @@ import pinnedRouter from './routes/pinned.routes.js';
 
 app.use('/api/v1/pinned', pinnedRouter);
 
+import searchRouter from './routes/search.routes.js';
+
+app.use('/api/v1/search', searchRouter);
+
+import expenseRouter from './routes/expense.routes.js';
+
+app.use('/api/v1/expenses', expenseRouter);
+
 // pdf routes
 import { pdfRouter, resourcePdfRouter } from './routes/pdf.routes.js';
 

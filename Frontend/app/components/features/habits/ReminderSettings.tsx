@@ -202,8 +202,8 @@ export default function ReminderSettings() {
         <div
           className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
             error
-              ? 'border-red-500/20 bg-red-500/10 text-red-600'
-              : 'border-green-500/20 bg-green-500/10 text-green-700'
+              ? 'border-[var(--danger-border)] bg-[var(--danger-soft)] text-[var(--danger-text)]'
+              : 'border-[var(--success-border)] bg-[var(--success-soft)] text-[var(--success-text)]'
           }`}
           role={error ? 'alert' : 'status'}
         >

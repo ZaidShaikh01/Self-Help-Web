@@ -28,7 +28,9 @@ export type IconName =
   | 'arrow'
   | 'more'
   | 'archive'
-  | 'link';
+  | 'link'
+  | 'wallet'
+  | 'games';
 
 interface IconProps {
   name: IconName | string;
@@ -165,6 +167,18 @@ const paths: Record<string, React.ReactNode> = {
     <>
       <path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1 1" />
       <path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1-1" />
+    </>
+  ),
+  wallet: (
+    <>
+      <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6a3 3 0 0 1-3-3V6.5A2.5 2.5 0 0 1 5.5 4" />
+      <path d="M3 8h17M16 13h.01" />
+    </>
+  ),
+  games: (
+    <>
+      <path d="M7 8h10a4 4 0 0 1 3.8 5.2l-1 3a2 2 0 0 1-3.3.8L14 14h-4l-2.5 3a2 2 0 0 1-3.3-.8l-1-3A4 4 0 0 1 7 8Z" />
+      <path d="M7 10v4M5 12h4M16 11h.01M18 13h.01" />
     </>
   ),
 };

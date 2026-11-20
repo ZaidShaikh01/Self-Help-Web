@@ -47,6 +47,21 @@ const getResources = asyncHandler(async (req, res) => {
   );
 });
 
+const getResource = asyncHandler(async (req, res) => {
+  const resource = await Resource.findOne({
+    _id: req.params.id,
+    user: req.user._id,
+  });
+
+  if (!resource) {
+    throw new ApiError(404, 'Resource not found or unauthorized');
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, resource, 'Resource fetched successfully'));
+});
+
 const updateResource = asyncHandler(async (req, res) => {
   const resource = await Resource.findOne({
     _id: req.params.id,
@@ -80,4 +95,10 @@ const deleteResource = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, 'Resource deleted successfully'));
 });
 
-export { createResource, getResources, updateResource, deleteResource };
+export {
+  createResource,
+  getResources,
+  getResource,
+  updateResource,
+  deleteResource,
+};

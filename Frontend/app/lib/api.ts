@@ -96,7 +96,7 @@ function invalidateMutationCache(path: string) {
   if (!changedGroup) return;
 
   const keyPrefix = `${API_CACHE_PREFIX}${cacheUserId}:`;
-  const groups = new Set([changedGroup, 'dashboard', 'pinned']);
+  const groups = new Set([changedGroup, 'dashboard', 'pinned', 'search']);
   if (changedGroup === 'resources') groups.add('notes');
 
   try {

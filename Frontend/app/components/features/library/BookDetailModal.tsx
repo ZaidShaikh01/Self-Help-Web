@@ -19,6 +19,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import ConfirmDialog from '~/components/common/ConfirmDialog';
 import ModalLayer from '~/components/common/ModalLayer';
 import type { NewNoteData } from '~/components/common/AddModal';
 import type { Note, Resource, ResourceStatus } from '~/lib/library';
@@ -101,6 +102,7 @@ export default function BookDetailModal({
   const [noteError, setNoteError] = useState('');
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [attachmentError, setAttachmentError] = useState('');
+  const [confirmRemoveAttachment, setConfirmRemoveAttachment] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [demoError, setDemoError] = useState('');
   const [pinError, setPinError] = useState('');
@@ -238,9 +240,6 @@ export default function BookDetailModal({
   }
 
   async function handleRemoveAttachment() {
-    if (!window.confirm('Remove this file? Your book and notes will stay saved.')) {
-      return;
-    }
     setIsUploading(true);
     setAttachmentError('');
     try {
@@ -249,6 +248,7 @@ export default function BookDetailModal({
       setAttachmentError(
         error instanceof Error ? error.message : 'The file could not be removed.',
       );
+      throw error;
     } finally {
       setIsUploading(false);
     }
@@ -481,7 +481,7 @@ export default function BookDetailModal({
                         <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()}>
                           <RefreshCw size={14} /> Replace
                         </button>
-                        <button type="button" disabled={isUploading} onClick={() => void handleRemoveAttachment()}>
+                        <button type="button" disabled={isUploading} onClick={() => setConfirmRemoveAttachment(true)}>
                           <Trash2 size={14} /> Remove
                         </button>
                       </div>
@@ -595,6 +595,16 @@ export default function BookDetailModal({
           </aside>
         </div>
       </article>
+      {confirmRemoveAttachment && (
+        <ConfirmDialog
+          title="Remove attached file?"
+          description="Remove this file? Your book and notes will stay saved."
+          confirmLabel="Remove file"
+          tone="danger"
+          onClose={() => setConfirmRemoveAttachment(false)}
+          onConfirm={handleRemoveAttachment}
+        />
+      )}
     </ModalLayer>
   );
 }

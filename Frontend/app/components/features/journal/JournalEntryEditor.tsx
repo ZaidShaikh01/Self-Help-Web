@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import ConfirmDialog from '~/components/common/ConfirmDialog';
+import ModalLayer from '~/components/common/ModalLayer';
 import { Icon } from '~/components/ui/Icon';
 import type {
   JournalEntry,
@@ -49,6 +51,7 @@ export default function JournalEntryEditor({
 }: JournalEntryEditorProps) {
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const linkSelectionRef = useRef({ start: 0, end: 0 });
   const [title, setTitle] = useState(entry?.title ?? '');
   const [body, setBody] = useState(entry?.body ?? '');
   const [initialTime] = useState(
@@ -82,6 +85,10 @@ export default function JournalEntryEditor({
   );
   const [prompt, setPrompt] = useState(entry?.prompt ?? initialPrompt);
   const [formError, setFormError] = useState('');
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkError, setLinkError] = useState('');
   const initialValues = {
     title: entry?.title ?? '',
     body: entry?.body ?? '',
@@ -126,7 +133,8 @@ export default function JournalEntryEditor({
   }, []);
 
   function cancelEditing() {
-    if (isDirty && !window.confirm('Discard your unsaved journal changes?')) {
+    if (isDirty) {
+      setDiscardDialogOpen(true);
       return;
     }
     onCancel();
@@ -151,32 +159,41 @@ export default function JournalEntryEditor({
   }
 
   function insertLink() {
-    const url = window.prompt('Enter a link URL (https://...)');
-    if (!url) return;
+    const textarea = bodyRef.current;
+    if (!textarea) return;
+    linkSelectionRef.current = {
+      start: textarea.selectionStart,
+      end: textarea.selectionEnd,
+    };
+    setLinkUrl('');
+    setLinkError('');
+    setLinkDialogOpen(true);
+  }
+
+  function applyLink() {
     let parsedUrl: URL;
     try {
-      parsedUrl = new URL(url);
+      parsedUrl = new URL(linkUrl.trim());
     } catch {
-      setFormError('Enter a valid link that starts with https:// or http://.');
+      setLinkError('Enter a valid link that starts with https:// or http://.');
       return;
     }
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      setFormError('Only http and https links can be added.');
+      setLinkError('Only http and https links can be added.');
       return;
     }
 
     const textarea = bodyRef.current;
     if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const { start, end } = linkSelectionRef.current;
     const selected = body.slice(start, end) || 'link text';
     const markdown = `[${selected}](${parsedUrl.href})`;
     setBody(`${body.slice(0, start)}${markdown}${body.slice(end)}`);
+    setLinkDialogOpen(false);
     requestAnimationFrame(() => {
       textarea.focus();
       textarea.setSelectionRange(start + 1, start + 1 + selected.length);
     });
-    setFormError('');
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -224,6 +241,72 @@ export default function JournalEntryEditor({
 
   return (
     <div className="journal-page journal-editor-page route-enter">
+      {discardDialogOpen && (
+        <ConfirmDialog
+          title="Discard unsaved changes?"
+          description="Your journal changes have not been saved. Leave this entry and discard them?"
+          confirmLabel="Discard changes"
+          tone="danger"
+          onClose={() => setDiscardDialogOpen(false)}
+          onConfirm={onCancel}
+        />
+      )}
+      {linkDialogOpen && (
+        <ModalLayer
+          onClose={() => setLinkDialogOpen(false)}
+          className="fixed inset-0 z-[11000] grid place-items-center overflow-y-auto bg-black/55 p-4 backdrop-blur-sm"
+        >
+          <form
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journal-link-title"
+            onSubmit={(event) => {
+              event.preventDefault();
+              applyLink();
+            }}
+            className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-2xl sm:p-6"
+          >
+            <h2 id="journal-link-title" className="text-base font-semibold">
+              Insert a link
+            </h2>
+            <p className="mt-2 text-sm text-[var(--text-2)]">
+              Enter a web address starting with https:// or http://.
+            </p>
+            <label className="mt-4 block text-xs font-medium text-[var(--text-2)]">
+              Link URL
+              <input
+                type="text"
+                inputMode="url"
+                autoFocus
+                value={linkUrl}
+                onChange={(event) => setLinkUrl(event.target.value)}
+                placeholder="https://example.com"
+                className="mt-2 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
+              />
+            </label>
+            {linkError && (
+              <p className="mt-3 text-sm text-[var(--danger-text)]" role="alert">
+                {linkError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setLinkDialogOpen(false)}
+                className="rounded-lg border border-[var(--border)] px-4 py-2 text-xs font-mono font-semibold uppercase tracking-wider text-[var(--text-2)] hover:bg-[var(--canvas-2)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="rounded-lg bg-[var(--accent-fill)] px-4 py-2 text-xs font-mono font-semibold uppercase tracking-wider text-[var(--on-accent)] hover:bg-[var(--accent-fill-hover)]"
+              >
+                Insert link
+              </button>
+            </div>
+          </form>
+        </ModalLayer>
+      )}
       <header className="journal-editor-topbar">
         <button type="button" className="journal-back-link" onClick={cancelEditing}>
           <Icon name="arrow" size={14} className="journal-arrow-left" />

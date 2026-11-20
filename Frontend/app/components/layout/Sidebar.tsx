@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import { NavLink } from 'react-router';
 import { gsap } from 'gsap';
+import { Pin } from 'lucide-react';
 import { Icon, type IconName } from '~/components/ui/Icon';
 import { getApiCacheUser } from '~/lib/api';
 import { updateUserPreferences } from '~/lib/preferences';
@@ -15,7 +16,7 @@ interface User {
 interface SidebarProps {
   onNavigate?: (id: string) => void;
   onQuickCapture?: () => void;
-  onSearch?: () => void;
+  onPinnedItems?: () => void;
   user?: User;
 }
 
@@ -25,11 +26,12 @@ const NAV: Array<{ id: string; label: string; icon: IconName; to: string }> = [
   { id: 'habits', label: 'HABITS', icon: 'habits', to: '/habits' },
   { id: 'library', label: 'LIBRARY', icon: 'library', to: '/library' },
   { id: 'journal', label: 'JOURNAL', icon: 'journal', to: '/journal' },
+  { id: 'expenses', label: 'EXPENSES', icon: 'wallet', to: '/expenses' },
+  { id: 'games', label: 'GAMES', icon: 'games', to: '/games' },
   { id: 'timeline', label: 'TIMELINE', icon: 'timeline', to: '/timeline' },
   { id: 'insights', label: 'INSIGHTS', icon: 'insights', to: '/insights' },
+  { id: 'notifications', label: 'NOTIFICATIONS', icon: 'bell', to: '/notifications' },
 ];
-
-const PINNED = ['ATOMIC HABITS', 'WEEKLY REFLECTION'];
 
 // Dimensions strictly matching reference: 248px open, 72px rail
 const WIDTH_OPEN = 248;
@@ -98,7 +100,7 @@ function useStoredCollapsed(): [boolean, (v: boolean) => void] {
 export default function Sidebar({
   onNavigate = () => {},
   onQuickCapture = () => {},
-  onSearch = () => {},
+  onPinnedItems = () => {},
   user = { name: 'ALEX MORGAN', workspace: 'ALEX', initial: 'A' },
 }: SidebarProps) {
   const [manualCollapsed, setManualCollapsed] = useStoredCollapsed();
@@ -363,23 +365,9 @@ export default function Sidebar({
           className={`my-3 border-t border-[var(--border-subtle)] ${collapsed ? 'w-8 self-center' : 'w-full'}`}
         />
 
-        {/* Search & Quick Capture */}
+        {/* Quick Capture */}
         {collapsed ? (
           <div className="flex w-full flex-col items-center gap-2">
-            <button
-              type="button"
-              aria-label="Search"
-              title="Search"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSearch();
-              }}
-              data-dock
-              className="flex h-10 w-[50px] cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:border-[var(--border-strong)]"
-            >
-              <Icon name="search" size={17} />
-            </button>
-
             <button
               type="button"
               aria-label="Quick capture"
@@ -393,25 +381,23 @@ export default function Sidebar({
             >
               <Icon name="plus" size={17} />
             </button>
+
+            <button
+              type="button"
+              aria-label="Pinned items"
+              title="Pinned items"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPinnedItems();
+              }}
+              data-dock
+              className="flex h-10 w-[50px] cursor-pointer items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--accent)]"
+            >
+              <Pin size={17} />
+            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSearch();
-              }}
-              data-dock
-              className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[10px] tracking-wider text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
-            >
-              <div className="flex items-center gap-2">
-                <Icon name="search" size={15} />
-                <span>SEARCH</span>
-              </div>
-              <kbd className="text-[9px]">⌘K</kbd>
-            </button>
-
             <button
               type="button"
               onClick={(e) => {
@@ -424,26 +410,18 @@ export default function Sidebar({
               <Icon name="plus" size={16} /> QUICK CAPTURE
             </button>
 
-            {/* Pinned section */}
-            <div className="mt-3">
-              <p className="px-1 text-[9px] font-bold tracking-widest text-[var(--text-3)]">
-                PINNED
-              </p>
-              <ul className="mt-1.5 flex flex-col gap-1.5">
-                {PINNED.map((p) => (
-                  <li key={p}>
-                    <button
-                      type="button"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex cursor-pointer items-center gap-2 px-1 text-[10px] tracking-wider text-[var(--text-2)] hover:text-[var(--text)]"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full border border-[var(--border-strong)]" />
-                      {p}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPinnedItems();
+              }}
+              data-dock
+              className="mt-2 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-left text-[10px] font-semibold tracking-wider text-[var(--text-2)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--accent)]"
+            >
+              <Pin size={15} />
+              PINNED ITEMS
+            </button>
           </div>
         )}
       </div>

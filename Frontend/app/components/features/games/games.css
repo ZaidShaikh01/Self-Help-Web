@@ -1,0 +1,364 @@
+.games-page {
+  display: flex;
+  max-width: 1080px;
+  flex-direction: column;
+  gap: 25px;
+  margin: 0 auto;
+  padding: 18px 0 64px;
+  animation: games-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.games-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 5px 0 22px;
+}
+
+.games-page-header > div > p,
+.dino-card-header > div > p,
+.minesweeper-header > div > p {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.games-page-header h1 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: clamp(32px, 4vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.065em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.games-page-header > div > span {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.games-page-header > a,
+.dino-card-footer > button,
+.minesweeper-footer > button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 11px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.games-page-header > a:hover,
+.dino-card-footer > button:hover,
+.minesweeper-footer > button:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.dino-card,
+.minesweeper-card {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px;
+  background:
+    radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--accent) 6%, transparent), transparent 44%),
+    var(--surface);
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--text) 4%, transparent);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.dino-card:hover,
+.minesweeper-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+}
+
+.dino-card-header,
+.minesweeper-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dino-card-header > div > p,
+.minesweeper-header > div > p {
+  margin-bottom: 5px;
+}
+
+.dino-card-header h2,
+.minesweeper-header h2 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+
+.dino-score,
+.minesweeper-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 7px;
+  padding: 7px 9px;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.dino-score strong,
+.minesweeper-counter strong {
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.dino-playfield {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 154px;
+  overflow: hidden;
+  margin-top: 19px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--border) 65%, transparent) 1px, transparent 1px),
+    var(--canvas);
+  background-size: 15px 15px;
+  cursor: pointer;
+  isolation: isolate;
+}
+
+.dino-ground {
+  position: absolute;
+  right: 0;
+  bottom: 25px;
+  left: 0;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.dino-runner {
+  position: absolute;
+  z-index: 1;
+  bottom: 31px;
+  left: 11%;
+  color: var(--accent);
+  font-size: 31px;
+  line-height: 1;
+  transition: bottom 280ms cubic-bezier(0.2, 0.75, 0.3, 1.15);
+}
+
+.dino-runner::after {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--surface);
+  content: '';
+}
+
+.dino-runner.is-jumping {
+  bottom: 85px;
+}
+
+.dino-obstacle {
+  position: absolute;
+  bottom: 30px;
+  z-index: 1;
+  width: 11px;
+  height: 27px;
+  border-radius: 5px 5px 2px 2px;
+  background: var(--text-2);
+}
+
+.dino-obstacle::before,
+.dino-obstacle::after {
+  position: absolute;
+  width: 7px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--text-2);
+  content: '';
+}
+
+.dino-obstacle::before {
+  top: 8px;
+  left: -5px;
+}
+
+.dino-obstacle::after {
+  top: 14px;
+  right: -5px;
+}
+
+.dino-game-over {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--canvas) 82%, transparent);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.dino-card-footer,
+.minesweeper-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.dino-card-footer > span,
+.minesweeper-footer > span {
+  color: var(--text-3);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.dino-card-footer > button,
+.minesweeper-footer > button {
+  min-height: 31px;
+  flex: 0 0 auto;
+  background: var(--canvas);
+}
+
+.dino-card-footer > button:disabled {
+  cursor: default;
+  opacity: 0.6;
+  transform: none;
+}
+
+.dino-card--compact {
+  padding: 17px;
+}
+
+.dino-card--compact .dino-playfield {
+  height: 118px;
+}
+
+.dino-full-games-link {
+  display: inline-flex;
+  margin-top: 11px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.dino-full-games-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.minesweeper-card {
+  text-align: left;
+}
+
+.minesweeper-board {
+  display: grid;
+  width: min(100%, 340px);
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+  margin: 19px auto 0;
+}
+
+.minesweeper-cell {
+  display: grid;
+  aspect-ratio: 1;
+  min-width: 0;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--canvas-2);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: clamp(10px, 2vw, 14px);
+  font-weight: 700;
+  transition: background 130ms ease, transform 130ms ease, border-color 130ms ease;
+}
+
+.minesweeper-cell:not(.is-revealed):hover {
+  transform: scale(1.05);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.minesweeper-cell.is-revealed {
+  border-color: var(--border-subtle);
+  background: var(--surface);
+  cursor: default;
+}
+
+.minesweeper-cell.is-mine {
+  background: color-mix(in srgb, #d65b54 18%, var(--surface));
+  color: #d65b54;
+}
+
+.minesweeper-cell:nth-child(8n + 2),
+.minesweeper-cell:nth-child(8n + 3) { color: #5e8bd0; }
+.minesweeper-cell:nth-child(8n + 4) { color: #4a9d77; }
+.minesweeper-cell:nth-child(8n + 5) { color: #c47b3f; }
+
+.games-page-note {
+  margin: 0;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 9px;
+  text-align: center;
+}
+
+@keyframes games-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .games-page { animation: none; }
+  .dino-runner { transition: none; }
+}
+
+@media (max-width: 760px) {
+  .games-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 500px) {
+  .games-page-header { flex-direction: column; }
+  .dino-card,
+  .minesweeper-card { padding: 15px; }
+  .minesweeper-board { gap: 3px; }
+}

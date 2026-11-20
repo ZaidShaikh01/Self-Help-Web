@@ -15,3 +15,14 @@ export const RESOURCE_CATEGORIES = [
   'Finance',
   'Philosophy',
 ];
+
+export const EXPENSE_CATEGORIES = [
+  'Food',
+  'Transport',
+  'Home',
+  'Health',
+  'Learning',
+  'Leisure',
+  'Bills',
+  'Other',
+];

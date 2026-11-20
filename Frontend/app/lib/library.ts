@@ -135,6 +135,10 @@ export async function createResource(data: CreateResourceInput): Promise<Resourc
   });
 }
 
+export function fetchResourceById(id: string): Promise<Resource> {
+  return api<Resource>(`/resources/${id}`);
+}
+
 export async function updateResource(
   id: string,
   data: UpdateResourceInput,
@@ -188,6 +192,7 @@ export function getBookAttachmentStreamUrl(id: string): string {
 
 export async function fetchNotes(params: {
   tag?: string;
+  q?: string;
   resourceId?: string;
   habitId?: string;
   page?: number;
@@ -196,6 +201,7 @@ export async function fetchNotes(params: {
   const query = new URLSearchParams();
 
   if (params.tag) query.set('tag', params.tag);
+  if (params.q) query.set('q', params.q);
   if (params.resourceId) query.set('resourceId', params.resourceId);
   if (params.habitId) query.set('habitId', params.habitId);
   if (params.page) query.set('page', String(params.page));

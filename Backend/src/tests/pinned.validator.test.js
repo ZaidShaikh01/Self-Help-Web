@@ -12,6 +12,7 @@ import {
   createJournalSchema,
   updateJournalSchema,
 } from '../validators/journal.validator.js';
+import { globalSearchQuerySchema } from '../validators/search.validator.js';
 
 test('habit, resource, and journal validators accept boolean pin updates', () => {
   assert.equal(createHabitSchema.safeParse({ title: 'Walk', isPinned: true }).success, true);
@@ -41,4 +42,15 @@ test('pin fields reject non-boolean values', () => {
   assert.equal(updateHabitSchema.safeParse({ isPinned: 'true' }).success, false);
   assert.equal(updateResourceSchema.safeParse({ isPinned: 1 }).success, false);
   assert.equal(updateJournalSchema.safeParse({ isPinned: 'false' }).success, false);
+});
+
+test('global search requires a trimmed query with a bounded length', () => {
+  assert.deepEqual(globalSearchQuerySchema.safeParse({ q: '  habits  ' }).data, {
+    q: 'habits',
+  });
+  assert.equal(globalSearchQuerySchema.safeParse({ q: 'x' }).success, false);
+  assert.equal(
+    globalSearchQuerySchema.safeParse({ q: 'x'.repeat(101) }).success,
+    false,
+  );
 });

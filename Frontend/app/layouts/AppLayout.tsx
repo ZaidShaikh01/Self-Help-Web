@@ -11,6 +11,11 @@ import ScrollProgress from '~/components/layout/ScrollProgress';
 import Header from '~/components/layout/Header';
 import Sidebar, { applySidebarPreference } from '~/components/layout/Sidebar';
 import MobileNav from '~/components/layout/MobileNav';
+import PinnedItemsDialog from '~/components/features/pinned/PinnedItemsDialog';
+import GlobalSearchDialog from '~/components/features/search/GlobalSearchDialog';
+import QuickCaptureDialog, {
+  type QuickCaptureKind,
+} from '~/components/features/quick-capture/QuickCaptureDialog';
 import { Button } from '~/components/ui/Button';
 import { AlertBanner } from '~/components/ui/AlertBanner';
 import Skeleton from '~/components/ui/Skeleton';
@@ -25,15 +30,28 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { isDark, setTheme, toggleTheme } = useTheme();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isQuickCaptureOpen, setIsQuickCaptureOpen] = useState(false);
   const isToday = pathname === '/dashboard';
   const isTimeline = pathname === '/timeline' || pathname.startsWith('/timeline/');
   const isInsights = pathname === '/insights' || pathname.startsWith('/insights/');
-  const openSearch = useCallback(
-    () => navigate('/library', { state: { focusSearch: true } }),
-    [navigate],
-  );
+  const isExpenses = pathname === '/expenses' || pathname.startsWith('/expenses/');
+  const isGames = pathname === '/games' || pathname.startsWith('/games/');
+  const openSearch = useCallback(() => setIsSearchOpen(true), []);
   const openQuickCapture = useCallback(
-    () => navigate('/habits', { state: { openQuickCapture: true } }),
+    () => setIsQuickCaptureOpen(true),
+    [],
+  );
+  const handleQuickCaptureSelect = useCallback(
+    (kind: QuickCaptureKind) => {
+      setIsQuickCaptureOpen(false);
+      if (kind === 'journal') navigate('/journal/new');
+      else if (kind === 'habit') {
+        navigate('/habits', { state: { openQuickCapture: true } });
+      } else {
+        navigate('/library', { state: { openQuickCaptureResource: true } });
+      }
+    },
     [navigate],
   );
 
@@ -41,6 +59,7 @@ export default function AppLayout() {
   const [retryCount, setRetryCount] = useState(0);
   const [preferencesError, setPreferencesError] = useState('');
   const [accountUser, setAccountUser] = useState<User | null>(null);
+  const [pinnedDialogOpen, setPinnedDialogOpen] = useState(false);
 
   useEffect(() => {
     const handleSyncError = (event: Event) => {
@@ -169,8 +188,8 @@ export default function AppLayout() {
         </div>
       )}
       <Sidebar
-        onSearch={openSearch}
         onQuickCapture={openQuickCapture}
+        onPinnedItems={() => setPinnedDialogOpen(true)}
         user={{
           name: username.toUpperCase(),
           workspace: username.toUpperCase(),
@@ -188,16 +207,22 @@ export default function AppLayout() {
         <Header
           onSearch={openSearch}
           onCreate={openQuickCapture}
+          onNotifications={() => navigate('/notifications')}
+          onPinnedItems={() => setPinnedDialogOpen(true)}
           onToggleTheme={toggleTheme}
           dark={isDark}
           user={{ name: username, initial: userInitial }}
           dashboardMode={isToday}
-          scope={isToday || isTimeline || isInsights ? 'LOC' : undefined}
+          scope={isToday || isTimeline || isInsights || isExpenses || isGames ? 'LOC' : undefined}
           section={
             isTimeline
               ? 'Timeline'
               : isInsights
                 ? 'Insights'
+                : isExpenses
+                  ? 'Expenses'
+                  : isGames
+                    ? 'Games'
                 : isToday
                   ? 'Today'
                   : undefined
@@ -225,6 +250,18 @@ export default function AppLayout() {
 
       {/* Mobile Navigation Bar (< 768px) */}
       <MobileNav onSearch={openSearch} />
+      {pinnedDialogOpen && (
+        <PinnedItemsDialog onClose={() => setPinnedDialogOpen(false)} />
+      )}
+      {isSearchOpen && (
+        <GlobalSearchDialog onClose={() => setIsSearchOpen(false)} />
+      )}
+      {isQuickCaptureOpen && (
+        <QuickCaptureDialog
+          onClose={() => setIsQuickCaptureOpen(false)}
+          onSelect={handleQuickCaptureSelect}
+        />
+      )}
     </div>
   );
 }

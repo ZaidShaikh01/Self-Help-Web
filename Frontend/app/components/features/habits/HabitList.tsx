@@ -22,7 +22,7 @@ interface HabitListProps {
   onManage: (
     habit: Habit,
     action: 'archive' | 'restore' | 'delete',
-  ) => void;
+  ) => void | Promise<void>;
   onCreate: () => void;
 }
 

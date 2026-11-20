@@ -5,7 +5,7 @@ import {
   deleteBookAttachment,
   deleteNote,
   deleteResource,
-  fetchBooks,
+  fetchResources,
   fetchNotes,
   updateEpubReadingProgress,
   updateNote,
@@ -34,7 +34,7 @@ export function useLibrary() {
 
     try {
       const [booksRes, notesRes] = await Promise.all([
-        fetchBooks(50),
+        fetchResources({ limit: 50 }),
         fetchNotes({ limit: 50 }),
       ]);
 
@@ -49,26 +49,33 @@ export function useLibrary() {
     }
   }, []);
 
+  const searchNotes = useCallback(async (query: string) => {
+    try {
+      const response = await fetchNotes({ q: query, limit: 50 });
+      setNotes(response.notes || []);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to search library notes.';
+      setError(message);
+    }
+  }, []);
+
   useEffect(() => {
     void loadLibrary();
   }, [loadLibrary]);
 
-  const addBook = useCallback(async (data: NewBookData) => {
+  const addResource = useCallback(async (data: CreateResourceInput) => {
     setIsSaving(true);
     setError(null);
 
     try {
-      const payload: CreateResourceInput = {
+      const newResource = await createResource({
+        ...data,
         title: data.title.trim(),
-        type: 'Book',
-        author: data.author.trim() || undefined,
-        category: data.category,
-        pages: Number(data.pages) > 0 ? Number(data.pages) : undefined,
-        currentPage: 0,
-        status: 'Plan to Do',
-      };
-
-      const newResource = await createResource(payload);
+        author: data.author?.trim() || undefined,
+        currentPage: data.currentPage ?? 0,
+        status: data.status ?? 'Plan to Do',
+      });
       setBooks((prev) => [newResource, ...prev]);
       return newResource;
     } catch (err) {
@@ -79,6 +86,20 @@ export function useLibrary() {
       setIsSaving(false);
     }
   }, []);
+
+  const addBook = useCallback(
+    async (data: NewBookData) =>
+      addResource({
+        title: data.title.trim(),
+        type: 'Book',
+        author: data.author.trim() || undefined,
+        category: data.category,
+        pages: Number(data.pages) > 0 ? Number(data.pages) : undefined,
+        currentPage: 0,
+        status: 'Plan to Do',
+      }),
+    [addResource],
+  );
 
   const updateBook = useCallback(
     async (id: string, data: UpdateResourceInput) => {
@@ -408,7 +429,9 @@ export function useLibrary() {
     isSaving,
     error,
     reload: loadLibrary,
+    searchNotes,
     addBook,
+    addResource,
     updateBook,
     toggleBookPin,
     updateBookProgress,

@@ -119,7 +119,9 @@ export default function JournalPage() {
       storageError={storageError}
       onTogglePin={togglePinned}
       onDelete={async (id) => {
-        if (await deleteEntry(id)) navigate('/journal');
+        const deleted = await deleteEntry(id);
+        if (deleted) navigate('/journal');
+        return deleted;
       }}
     />
   );

@@ -5,7 +5,6 @@ import HabitHistoryModal from '~/components/features/habits/HabitHistoryModal';
 import HabitOverview from '~/components/features/habits/HabitOverview';
 import HabitFilters from '~/components/features/habits/HabitFilters';
 import HabitList from '~/components/features/habits/HabitList';
-import ReminderSettings from '~/components/features/habits/ReminderSettings';
 import { Button } from '~/components/ui/Button';
 import { Icon } from '~/components/ui/Icon';
 import { useHabits } from '~/hooks/useHabits';
@@ -255,9 +254,6 @@ export default function HabitsPage() {
         </div>
       )}
 
-      {/* Web Push Notification Settings */}
-      <ReminderSettings />
-
       {/* Habits Analytics Overview */}
       {!showArchived && (
         <HabitOverview
@@ -307,9 +303,7 @@ export default function HabitsPage() {
           }}
           onProgress={(item) => void toggleProgress(item)}
           onAdjustProgress={(item, change) => void adjustProgress(item, change)}
-          onManage={(habit, action) => {
-            void manageHabit(habit, action);
-          }}
+          onManage={manageHabit}
           onCreate={openCreateForm}
         />
       </section>

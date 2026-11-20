@@ -1,6 +1,7 @@
 import { Pin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
+import ConfirmDialog from '~/components/common/ConfirmDialog';
 import { Icon } from '~/components/ui/Icon';
 import type { JournalEntry } from './types';
 import { formatDay, formatTime, parseInlineContent } from './journalUtils';
@@ -8,7 +9,7 @@ import { formatDay, formatTime, parseInlineContent } from './journalUtils';
 interface JournalEntryDetailProps {
   entry: JournalEntry;
   storageError: string;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string) => Promise<boolean>;
   onTogglePin: (id: string) => Promise<JournalEntry | undefined>;
 }
 
@@ -23,6 +24,7 @@ export default function JournalEntryDetail({
   const [actionsOpen, setActionsOpen] = useState(false);
   const [notice, setNotice] = useState('');
   const [isPinning, setIsPinning] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function togglePin() {
     setIsPinning(true);
@@ -64,17 +66,23 @@ export default function JournalEntryDetail({
   }
 
   async function deleteEntry() {
-    const confirmed = window.confirm(
-      `Delete “${entry.title || 'Untitled reflection'}”? This cannot be undone.`,
-    );
-    if (!confirmed) return;
-    await onDelete(entry.id);
+    return onDelete(entry.id);
   }
 
   const paragraphs = entry.body.split(/\n{2,}/).filter(Boolean);
 
   return (
     <article className="journal-page journal-detail-page route-enter">
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete journal entry?"
+          description={`Delete “${entry.title || 'Untitled reflection'}”? This cannot be undone.`}
+          confirmLabel="Delete entry"
+          tone="danger"
+          onClose={() => setConfirmDelete(false)}
+          onConfirm={deleteEntry}
+        />
+      )}
       <header className="journal-detail-toolbar">
         <button
           type="button"
@@ -126,7 +134,7 @@ export default function JournalEntryDetail({
                   type="button"
                   role="menuitem"
                   className="is-danger"
-                  onClick={deleteEntry}
+                  onClick={() => setConfirmDelete(true)}
                 >
                   <Icon name="close" size={14} />
                   Delete entry

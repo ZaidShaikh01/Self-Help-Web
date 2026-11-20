@@ -39,6 +39,15 @@
   --danger-soft: #fff5f2;
   --danger-border: #e7b8ac;
   --danger-text: #a52d10;
+  --danger-fill: #a52d10;
+  --danger-fill-hover: #85220d;
+  --on-danger: #ffffff;
+  --success-soft: #e9f5ec;
+  --success-border: #b6d8bf;
+  --success-text: #236537;
+  --success-fill: #24733b;
+  --success-fill-hover: #195e2e;
+  --on-success: #ffffff;
 
   /* Layout Dimensions */
   --sidebar: 248px;
@@ -93,6 +102,15 @@
   --danger-soft: #331b17;
   --danger-border: #6f362c;
   --danger-text: #ff9a85;
+  --danger-fill: #ff9a85;
+  --danger-fill-hover: #ffb09f;
+  --on-danger: #28201e;
+  --success-soft: #1d3826;
+  --success-border: #34563d;
+  --success-text: #92d6a1;
+  --success-fill: #92d6a1;
+  --success-fill-hover: #b2e7bc;
+  --on-success: #1c2820;
 
   --landing-canvas: var(--canvas);
   --landing-surface: var(--surface);

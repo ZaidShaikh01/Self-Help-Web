@@ -11,6 +11,7 @@ import {
 import {
   createResource,
   getResources,
+  getResource,
   updateResource,
   deleteResource,
 } from '../controllers/resource.controller.js';
@@ -54,6 +55,7 @@ router
 
 router
   .route('/:id')
+  .get(getResource)
   .patch(validate(updateResourceSchema), updateResource)
   .delete(deleteResource);
 

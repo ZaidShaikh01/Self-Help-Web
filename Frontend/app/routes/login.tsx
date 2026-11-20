@@ -20,6 +20,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,6 +56,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       }
       description="Return to the practices, reflections, and learning you have kept connected."
     >
+      {notice && (
+        <p className="auth-notice" role="status">
+          {notice}
+        </p>
+      )}
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         {error && (
           <div className="auth-error" role="alert">
@@ -90,7 +96,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               type="button"
               className="auth-forgot"
               onClick={() =>
-                window.alert('Connect your password recovery flow here.')
+                setNotice('Password recovery is not available yet.')
               }
             >
               Forgot password?
@@ -147,7 +153,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <button
           type="button"
           className="auth-google"
-          onClick={() => window.alert('Google sign-in is not connected yet.')}
+          onClick={() => setNotice('Google sign-in is not connected yet.')}
         >
           <svg aria-hidden="true" viewBox="0 0 24 24">
             <path

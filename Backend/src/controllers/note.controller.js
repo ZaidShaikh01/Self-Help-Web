@@ -4,6 +4,7 @@ import { Note } from '../models/note.model.js';
 import { Resource } from '../models/resource.model.js';
 import { Habit } from '../models/habit.model.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
+import { escapeRegExp } from '../utils/escapeRegExp.js';
 
 const createNote = asyncHandler(async (req, res) => {
   const { title, content, quote, tags, resourceId, habitId } = req.body;
@@ -44,12 +45,16 @@ const createNote = asyncHandler(async (req, res) => {
 });
 
 const getNotes = asyncHandler(async (req, res) => {
-  const { resourceId, habitId, tag, page, limit } = req.validQuery;
+  const { resourceId, habitId, tag, q, page, limit } = req.validQuery;
   const filter = { user: req.user._id };
 
   if (resourceId) filter.resource = resourceId;
   if (habitId) filter.habit = habitId;
   if (tag) filter.tags = tag;
+  if (q) {
+    const search = new RegExp(escapeRegExp(q), 'i');
+    filter.$or = [{ title: search }, { content: search }, { quote: search }, { tags: search }];
+  }
 
   const [notes, totalNotes] = await Promise.all([
     Note.find(filter)

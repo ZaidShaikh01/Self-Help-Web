@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import PromptReflectionCard from '~/components/common/PromptReflectionCard';
 import {
   getActivityDate,
@@ -10,11 +11,16 @@ import DailyIntention from '~/components/features/dashboard/DailyIntention';
 import TodayHero from '~/components/features/dashboard/TodayHero';
 import TodayPractices, { type TodayPractice } from '~/components/features/dashboard/TodayPractices';
 import TodayTicker from '~/components/features/dashboard/TodayTicker';
+import ExpensePreview from '~/components/features/dashboard/ExpensePreview';
+import DinoRunner from '~/components/features/games/DinoRunner';
 import useJournalEntries from '~/components/features/journal/useJournalEntries';
 import { toLocalDateInput } from '~/components/features/journal/journalUtils';
 import { useHabits } from '~/hooks/useHabits';
+import { useExpenses } from '~/hooks/useExpenses';
 import type { TodayHabit } from '~/lib/habits';
 import type { IconName } from '~/components/ui/Icon';
+import { getMonthDateRange } from '~/lib/expenses';
+import '~/components/features/games/games.css';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -45,6 +51,7 @@ function toTodayPractice(item: TodayHabit): TodayPractice {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const {
     todayHabits,
     isLoading: habitsLoading,
@@ -65,6 +72,14 @@ export default function Dashboard() {
     isReady: journalReady,
     storageError: journalStorageError,
   } = useJournalEntries();
+  const expenseRange = useMemo(() => getMonthDateRange(new Date()), []);
+  const {
+    expenses,
+    summary: expenseSummary,
+    isLoading: expensesLoading,
+    error: expensesError,
+    reload: reloadExpenses,
+  } = useExpenses(expenseRange.from, expenseRange.to);
   const [reflectionSaved, setReflectionSaved] = useState(false);
   const practices = useMemo(
     () => todayHabits.map(toTodayPractice),
@@ -157,7 +172,18 @@ export default function Dashboard() {
           activityError={activityError}
           onRetryActivity={reloadActivity}
           nextPractice={practices.find((practice) => !practice.completed)?.title}
-        />
+        >
+          <ExpensePreview
+            expenses={expenses}
+            totalCents={expenseSummary.totalCents}
+            monthLabel={new Date().toLocaleDateString(undefined, { month: 'long' })}
+            isLoading={expensesLoading}
+            error={expensesError}
+            onRetry={reloadExpenses}
+            onAddExpense={() => navigate('/expenses')}
+          />
+          <DinoRunner compact />
+        </TodayAside>
       </div>
     </div>
   );

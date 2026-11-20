@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import MetricProgressCard from '~/components/common/MetricCard';
 import { countActivityByDate } from '~/components/features/activity/activityMath';
@@ -13,6 +14,7 @@ interface TodayAsideProps {
   activityError: string;
   onRetryActivity: () => void;
   nextPractice?: string;
+  children?: ReactNode;
 }
 
 function getWeekActivity(events: GrowthActivityEvent[]) {
@@ -118,6 +120,7 @@ export default function TodayAside({
   activityError,
   onRetryActivity,
   nextPractice,
+  children,
 }: TodayAsideProps) {
   const todayLabel = new Date()
     .toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -169,6 +172,7 @@ export default function TodayAside({
         </strong>
         <Link to="/insights">VIEW INSIGHTS</Link>
       </section>
+      {children}
     </aside>
   );
 }

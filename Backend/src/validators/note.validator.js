@@ -32,6 +32,7 @@ export const updateNoteSchema = z
   .refine(atLeastOneField, 'Provide at least one field to update');
 
 export const noteQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().min(1).max(100).optional(),
   resourceId: objectIdSchema.optional(),
   habitId: objectIdSchema.optional(),
   tag: z.string().trim().toLowerCase().optional(),
