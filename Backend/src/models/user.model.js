@@ -36,6 +36,16 @@ const userSchema = new Schema(
       type: String,
       required: [true, 'Password is needed'],
     },
+    preferences: {
+      theme: {
+        type: String,
+        enum: ['light', 'dark'],
+      },
+      sidebarCollapsed: {
+        type: Boolean,
+        default: false,
+      },
+    },
     // refreshToken removed: refresh tokens will be managed by sessions.
   },
   {

@@ -1,22 +1,31 @@
-import React, { useEffect, useRef, useState } from 'react';
 import {
-  X,
-  Pencil,
-  Trash2,
-  CheckCircle2,
-  ChevronDown,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from 'react';
+import {
+  ArrowLeft,
   BookOpen,
+  Check,
+  ChevronDown,
+  ExternalLink,
   FileText,
-  Upload,
+  Pencil,
+  Pin,
+  Plus,
   RefreshCw,
-  AlertCircle,
-  Bookmark,
+  Trash2,
+  Upload,
 } from 'lucide-react';
 import ModalLayer from '~/components/common/ModalLayer';
-import type { Resource, ResourceStatus } from '~/lib/library';
+import type { NewNoteData } from '~/components/common/AddModal';
+import type { Note, Resource, ResourceStatus } from '~/lib/library';
 
 interface BookDetailModalProps {
   book: Resource | null;
+  notes: Note[];
   onClose: () => void;
   onEdit: (book: Resource) => void;
   onDelete: (book: Resource) => void;
@@ -25,521 +34,567 @@ interface BookDetailModalProps {
     currentPage: number,
     status?: ResourceStatus,
   ) => Promise<void>;
+  onTogglePin: (id: string) => Promise<void>;
   onUploadAttachment: (id: string, file: File) => Promise<void>;
   onRemoveAttachment: (id: string) => Promise<void>;
   onOpenPdfReader: (book: Resource) => void;
   onOpenEpubReader: (book: Resource) => void;
+  onSaveNote: (data: NewNoteData) => Promise<void>;
+  onOpenNote: (note: Note) => void;
+  onAddDemo: (book: Resource) => Promise<void>;
 }
 
 const STATUSES: ResourceStatus[] = ['Plan to Do', 'In Progress', 'Completed'];
+const DEMO_CONNECTIONS = [
+  { title: 'What stayed with me', type: 'Sample journal entry' },
+  { title: 'Reading', type: 'Sample habit' },
+];
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return 'Recently';
+  return date.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
 function formatFileSize(bytes?: number) {
   if (!bytes || bytes <= 0) return '0 B';
   const mb = bytes / (1024 * 1024);
   if (mb >= 1) return `${mb.toFixed(1)} MB`;
-  const kb = bytes / 1024;
-  return `${kb.toFixed(0)} KB`;
+  return `${(bytes / 1024).toFixed(0)} KB`;
+}
+
+function getInitials(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
 }
 
 export default function BookDetailModal({
   book,
+  notes,
   onClose,
   onEdit,
   onDelete,
   onUpdateProgress,
+  onTogglePin,
   onUploadAttachment,
   onRemoveAttachment,
   onOpenPdfReader,
   onOpenEpubReader,
+  onSaveNote,
+  onOpenNote,
+  onAddDemo,
 }: BookDetailModalProps) {
-  const [currentPageInput, setCurrentPageInput] = useState<number>(0);
-  const [statusInput, setStatusInput] = useState<ResourceStatus>('Plan to Do');
-  const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
-  const [progressError, setProgressError] = useState<string | null>(null);
-  const [progressSuccess, setProgressSuccess] = useState(false);
-
-  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
-  const [attachmentError, setAttachmentError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [status, setStatus] = useState<ResourceStatus>('Plan to Do');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [progressError, setProgressError] = useState('');
+  const [progressSaved, setProgressSaved] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [noteError, setNoteError] = useState('');
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const [attachmentError, setAttachmentError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [demoError, setDemoError] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [isPinning, setIsPinning] = useState(false);
+  const [isAddingDemo, setIsAddingDemo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (book) {
-      setCurrentPageInput(book.currentPage || 0);
-      setStatusInput(book.status || 'Plan to Do');
-      setProgressError(null);
-      setProgressSuccess(false);
-      setAttachmentError(null);
-    }
-  }, [book]);
+    if (!book) return;
+    setCurrentPage(book.currentPage || 0);
+    setStatus(book.status || 'Plan to Do');
+    setNoteDraft('');
+    setNoteError('');
+    setProgressError('');
+    setProgressSaved(false);
+    setAttachmentError('');
+    setDemoError('');
+  }, [book?._id]);
 
   if (!book) return null;
+  const currentBook = book;
 
-  const totalPages = book.pages || 0;
-  const progressPercent =
-    typeof book.progress === 'number'
-      ? book.progress
-      : totalPages > 0
-        ? Math.min(
-            100,
-            Math.round(((book.currentPage || 0) / totalPages) * 100),
-          )
-        : 0;
-
-  const hasAttachment = Boolean(
-    book.attachment &&
-      (book.attachment.fileName || book.attachment.mimeType),
-  );
-
+  const isDemo = book._id.startsWith('demo-');
+  const totalPages = book.pages ?? 0;
+  const progress = totalPages
+    ? Math.max(0, Math.min(100, Math.round((currentPage / totalPages) * 100)))
+    : Math.max(0, Math.min(100, Math.round(book.progress || 0)));
   const isEpub = Boolean(
-    hasAttachment &&
-      (book.attachment?.mimeType === 'application/epub+zip' ||
-        book.attachment?.fileName?.toLowerCase().endsWith('.epub')),
+    book.attachment?.mimeType === 'application/epub+zip' ||
+      book.attachment?.fileName?.toLowerCase().endsWith('.epub'),
+  );
+  const linkedNotes = notes.filter(
+    (note) =>
+      note.resource &&
+      typeof note.resource === 'object' &&
+      note.resource._id === book._id,
   );
 
-  const handleStatusChange = (newStatus: ResourceStatus) => {
-    setStatusInput(newStatus);
-    if (newStatus === 'Completed' && totalPages > 0) {
-      setCurrentPageInput(totalPages);
-    }
-  };
-
-  const handleSaveProgress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProgressError(null);
-    setProgressSuccess(false);
-
-    const pageNum = Number(currentPageInput);
-    if (!Number.isInteger(pageNum) || pageNum < 0) {
-      setProgressError('Current page must be a positive number or zero.');
-      return;
-    }
-
-    if (totalPages > 0 && pageNum > totalPages) {
+  async function saveProgress(nextPage: number, nextStatus: ResourceStatus) {
+    setProgressError('');
+    setProgressSaved(false);
+    setIsUpdating(true);
+    try {
+      await onUpdateProgress(currentBook._id, nextPage, nextStatus);
+      setProgressSaved(true);
+    } catch (error) {
       setProgressError(
-        `Current page cannot exceed total pages (${totalPages}).`,
+        error instanceof Error ? error.message : 'Progress could not be saved.',
       );
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleStatusChange(nextStatus: ResourceStatus) {
+    setStatus(nextStatus);
+    const nextPage =
+      nextStatus === 'Completed' && totalPages > 0
+        ? totalPages
+        : currentPage;
+    setCurrentPage(nextPage);
+    await saveProgress(nextPage, nextStatus);
+  }
+
+  async function handleProgressSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!Number.isInteger(currentPage) || currentPage < 0) {
+      setProgressError('Enter a whole page number of zero or more.');
       return;
     }
-
-    let resolvedStatus = statusInput;
-    if (
-      totalPages > 0 &&
-      pageNum >= totalPages &&
-      resolvedStatus !== 'Completed'
-    ) {
-      resolvedStatus = 'Completed';
-      setStatusInput('Completed');
-    } else if (pageNum > 0 && resolvedStatus === 'Plan to Do') {
-      resolvedStatus = 'In Progress';
-      setStatusInput('In Progress');
+    if (totalPages > 0 && currentPage > totalPages) {
+      setProgressError(`Current page cannot exceed ${totalPages}.`);
+      return;
     }
+    const nextStatus =
+      totalPages > 0 && currentPage >= totalPages
+        ? 'Completed'
+        : currentPage > 0 && status === 'Plan to Do'
+          ? 'In Progress'
+          : status;
+    setStatus(nextStatus);
+    await saveProgress(currentPage, nextStatus);
+  }
 
-    setIsUpdatingProgress(true);
-
+  async function handleSaveNote() {
+    if (!noteDraft.trim()) {
+      setNoteError('Write a short reflection before saving.');
+      return;
+    }
+    setIsSavingNote(true);
+    setNoteError('');
     try {
-      await onUpdateProgress(book._id, pageNum, resolvedStatus);
-      setProgressSuccess(true);
-      setTimeout(() => setProgressSuccess(false), 2500);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to update progress.';
-      setProgressError(message);
+      await onSaveNote({
+        bookTitle: currentBook.title,
+        quote: '',
+        reflection: noteDraft.trim(),
+        tags: '',
+        resourceId: currentBook._id,
+      });
+      setNoteDraft('');
+    } catch (error) {
+      setNoteError(
+        error instanceof Error ? error.message : 'Your note could not be saved.',
+      );
     } finally {
-      setIsUpdatingProgress(false);
+      setIsSavingNote(false);
     }
-  };
+  }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
     if (!file) return;
-
-    setAttachmentError(null);
-
-    const ext = file.name.toLowerCase();
-    const hasValidExt = ext.endsWith('.pdf') || ext.endsWith('.epub');
-
-    if (!hasValidExt) {
-      setAttachmentError('Please select a valid PDF (.pdf) or EPUB (.epub) file.');
+    const name = file.name.toLowerCase();
+    if (!name.endsWith('.pdf') && !name.endsWith('.epub')) {
+      setAttachmentError('Choose a PDF or EPUB file.');
       return;
     }
-
     if (file.size > 50 * 1024 * 1024) {
-      setAttachmentError('File size exceeds the 50 MB maximum limit.');
+      setAttachmentError('The file must be smaller than 50 MB.');
       return;
     }
 
-    setIsUploadingAttachment(true);
+    setAttachmentError('');
+    setIsUploading(true);
     try {
-      await onUploadAttachment(book._id, file);
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Failed to upload attachment.';
-      setAttachmentError(message);
+      await onUploadAttachment(currentBook._id, file);
+    } catch (error) {
+      setAttachmentError(
+        error instanceof Error ? error.message : 'The file could not be uploaded.',
+      );
     } finally {
-      setIsUploadingAttachment(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setIsUploading(false);
+      event.target.value = '';
     }
-  };
+  }
 
-  const handleRemoveAttachment = async () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to remove this attachment? The book record and your notes will remain intact.',
-    );
-    if (!confirmed) return;
-
-    setAttachmentError(null);
-    setIsUploadingAttachment(true);
+  async function handleRemoveAttachment() {
+    if (!window.confirm('Remove this file? Your book and notes will stay saved.')) {
+      return;
+    }
+    setIsUploading(true);
+    setAttachmentError('');
     try {
-      await onRemoveAttachment(book._id);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to remove attachment.';
-      setAttachmentError(message);
+      await onRemoveAttachment(currentBook._id);
+    } catch (error) {
+      setAttachmentError(
+        error instanceof Error ? error.message : 'The file could not be removed.',
+      );
     } finally {
-      setIsUploadingAttachment(false);
+      setIsUploading(false);
     }
-  };
+  }
+
+  async function handleAddDemo() {
+    setIsAddingDemo(true);
+    setDemoError('');
+    try {
+      await onAddDemo(currentBook);
+    } catch (error) {
+      setDemoError(
+        error instanceof Error ? error.message : 'The example could not be added.',
+      );
+    } finally {
+      setIsAddingDemo(false);
+    }
+  }
+
+  async function handleTogglePin() {
+    setIsPinning(true);
+    setPinError('');
+    try {
+      await onTogglePin(currentBook._id);
+    } catch (error) {
+      setPinError(
+        error instanceof Error ? error.message : 'Pinned status could not be updated.',
+      );
+    } finally {
+      setIsPinning(false);
+    }
+  }
 
   return (
     <ModalLayer
-      canDismiss={!isUpdatingProgress && !isUploadingAttachment}
+      canDismiss={
+        !isUpdating &&
+        !isUploading &&
+        !isSavingNote &&
+        !isAddingDemo &&
+        !isPinning
+      }
       onClose={onClose}
-      className="fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/40 backdrop-blur-sm p-4"
+      className="library-detail-overlay fixed inset-0 z-[10000] overflow-y-auto bg-[var(--canvas)] text-[var(--text)]"
     >
-      <div
+      <article
         role="dialog"
         aria-modal="true"
         aria-labelledby="book-detail-title"
-        className="max-h-[90vh] w-full max-w-lg space-y-5 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl"
+        className="library-detail-panel mx-auto min-h-screen w-full max-w-[1440px] px-5 pb-12 sm:px-8 lg:px-12"
       >
-        {/* Top Header */}
-        <div className="flex justify-between items-start gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#3E6AE1] bg-[#3E6AE1]/10 px-2 py-0.5 rounded">
-                {book.category || 'Book'}
-              </span>
-              <span className="text-[10px] font-mono font-medium uppercase tracking-wider text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded">
-                {book.status}
-              </span>
-            </div>
-            <h2
-              id="book-detail-title"
-              className="text-xl font-bold text-[#171A20] mt-1.5 break-words"
-            >
-              {book.title}
-            </h2>
-            {book.author && (
-              <p className="text-xs text-[#5C5E62]">By {book.author}</p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close book details"
-            disabled={isUpdatingProgress || isUploadingAttachment}
-            className="p-1.5 bg-[#F4F4F4] hover:bg-[#EEEEEE] rounded-full transition-all text-[#171A20] disabled:opacity-50"
-          >
-            <X className="w-4 h-4" />
+        <div className="library-detail-topbar">
+          <button type="button" onClick={onClose} className="library-detail-back">
+            <ArrowLeft size={14} aria-hidden="true" />
+            Library
           </button>
+          <span>{progress}%</span>
         </div>
 
-        {/* Summary */}
-        {book.summary && (
-          <div className="space-y-1.5 bg-[#F4F4F4] p-4 rounded-xl">
-            <h4 className="text-xs font-bold text-[#5C5E62] uppercase tracking-wider">
-              Book Summary
-            </h4>
-            <p className="text-sm text-[#393C41] leading-relaxed">
-              {book.summary}
+        <section className="library-detail-hero">
+          <div className="library-detail-cover" aria-hidden="true">
+            <span>{getInitials(book.author || book.type)}</span>
+            <i />
+            <strong>{book.title}</strong>
+            <small>{book.category || book.type} / {progress}%</small>
+          </div>
+
+          <div className="library-detail-intro">
+            <p className="library-detail-kicker">
+              {isDemo ? 'DEMO BOOK' : book.type.toUpperCase()} <span>·</span>{' '}
+              ADDED {formatDate(book.createdAt).toUpperCase()}
             </p>
-          </div>
-        )}
-
-        {/* EBOOK ATTACHMENT SECTION (PDF & EPUB) */}
-        <div className="rounded-xl border border-neutral-200 bg-neutral-50/70 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-[#3E6AE1]" />
-              <span>Book Attachment</span>
-            </h4>
-            {hasAttachment && (
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
-                    isEpub
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : 'bg-blue-50 text-blue-700 border border-blue-200'
-                  }`}
-                >
-                  {isEpub ? 'EPUB' : 'PDF'}
-                </span>
-                <span className="text-[11px] font-mono text-neutral-500">
-                  {formatFileSize(book.attachment?.size)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {attachmentError && (
-            <div
-              role="alert"
-              className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{attachmentError}</span>
-            </div>
-          )}
-
-          {/* Hidden File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".pdf,.epub,application/pdf,application/epub+zip"
-            className="hidden"
-            disabled={isUploadingAttachment}
-          />
-
-          {hasAttachment ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-lg border border-neutral-200">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <BookOpen className="w-4 h-4 text-[#3E6AE1] shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-neutral-900 truncate">
-                      {book.attachment?.fileName || 'Attached Book'}
-                    </p>
-                    {isEpub && book.attachment?.epubProgress ? (
-                      <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-                        <Bookmark className="w-3 h-3" />
-                        <span>
-                          {book.attachment.epubProgress.percentage}% read (saved
-                          position)
-                        </span>
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-neutral-500">
-                        Uploaded to private vault
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      isEpub ? onOpenEpubReader(book) : onOpenPdfReader(book)
-                    }
-                    disabled={isUploadingAttachment}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#171A20] hover:bg-[#393C41] px-3 py-1.5 text-xs font-semibold text-white transition-colors cursor-pointer"
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>{isEpub ? 'Read EPUB' : 'Read PDF'}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-xs pt-1">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingAttachment}
-                  className="inline-flex items-center gap-1 text-neutral-600 hover:text-neutral-900 font-medium cursor-pointer disabled:opacity-50"
-                >
-                  <RefreshCw className="w-3 h-3" /> Replace file
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleRemoveAttachment}
-                  disabled={isUploadingAttachment}
-                  className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 font-medium cursor-pointer disabled:opacity-50"
-                >
-                  <Trash2 className="w-3 h-3" /> Remove file
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-4 border border-dashed border-neutral-300 rounded-lg bg-white text-center space-y-2">
-              <Upload className="w-5 h-5 text-neutral-400" />
-              <div>
-                <p className="text-xs font-semibold text-neutral-800">
-                  No ebook attached
-                </p>
-                <p className="text-[11px] text-neutral-500">
-                  Attach a PDF or EPUB (up to 50 MB) to read and track progress
-                  inside Growth OS.
-                </p>
-              </div>
+            <h1 id="book-detail-title">{book.title}</h1>
+            <p className="library-detail-author">{book.author || 'Unknown author'}</p>
+            {book.summary && <p className="library-detail-summary">{book.summary}</p>}
+            <span className="library-detail-tag">
+              {book.category || 'Personal library'}
+            </span>
+            {!isDemo && (
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAttachment}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-800 transition-colors cursor-pointer disabled:opacity-50"
+                className="library-detail-tag library-detail-pin"
+                onClick={() => void handleTogglePin()}
+                disabled={isPinning}
+                aria-pressed={book.isPinned}
               >
-                <Upload className="w-3.5 h-3.5" />
-                {isUploadingAttachment ? 'Uploading…' : 'Attach PDF or EPUB'}
+                <Pin size={13} fill={book.isPinned ? 'currentColor' : 'none'} />
+                {isPinning ? 'Saving…' : book.isPinned ? 'Unpin' : 'Pin book'}
               </button>
-            </div>
-          )}
-
-          {isUploadingAttachment && (
-            <div className="flex items-center justify-center gap-2 text-xs text-[#3E6AE1] font-medium py-1">
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#3E6AE1] border-t-transparent" />
-              <span>Processing secure vault storage…</span>
-            </div>
-          )}
-        </div>
-
-        {/* Reading Progress Visual */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-[#5C5E62]">
-            <span>
-              {totalPages > 0
-                ? `Pages read (${book.currentPage || 0} / ${totalPages})`
-                : 'Reading progress'}
-            </span>
-            <span className="font-semibold text-[#171A20]">
-              {progressPercent}%
-            </span>
-          </div>
-          <div className="w-full bg-[#EEEEEE] h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-[#171A20] h-full rounded-full transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Reading Progress Update Form */}
-        <form
-          onSubmit={handleSaveProgress}
-          className="rounded-xl border border-neutral-200 bg-[#FAF9F8] p-4 space-y-3"
-        >
-          <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800">
-              Update Reading Progress
-            </h4>
-            {progressSuccess && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-green-700">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Progress updated
-              </span>
             )}
+            {pinError && <p className="library-inline-error" role="alert">{pinError}</p>}
           </div>
 
-          {progressError && (
-            <p
-              role="alert"
-              className="text-xs text-red-600 bg-red-50 p-2 rounded"
-            >
-              {progressError}
-            </p>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label
-                htmlFor="reading-current-page"
-                className="block text-[11px] font-semibold text-neutral-700 mb-1"
+          <div className="library-detail-status">
+            <label htmlFor="book-detail-status">Status</label>
+            <div className="library-detail-select">
+              <select
+                id="book-detail-status"
+                value={status}
+                disabled={isDemo || isUpdating}
+                onChange={(event) =>
+                  void handleStatusChange(event.target.value as ResourceStatus)
+                }
               >
-                Current page
-              </label>
-              <div className="flex items-center gap-1">
-                <input
-                  id="reading-current-page"
-                  type="number"
-                  min={0}
-                  max={totalPages || 100000}
-                  value={currentPageInput}
-                  onChange={(e) => setCurrentPageInput(Number(e.target.value))}
-                  disabled={isUpdatingProgress}
-                  className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-sm text-neutral-900 outline-none focus:border-neutral-500 disabled:opacity-50"
-                />
-                {totalPages > 0 && (
-                  <span className="text-xs text-neutral-500 whitespace-nowrap">
-                    / {totalPages}
-                  </span>
-                )}
-              </div>
+                {STATUSES.map((value) => (
+                  <option value={value} key={value}>{value}</option>
+                ))}
+              </select>
+              <ChevronDown size={16} aria-hidden="true" />
             </div>
+            {isDemo && <small>Add this example to track it.</small>}
+          </div>
+        </section>
 
-            <div>
-              <label
-                htmlFor="reading-status"
-                className="block text-[11px] font-semibold text-neutral-700 mb-1"
-              >
-                Reading status
-              </label>
-              <div className="relative">
-                <select
-                  id="reading-status"
-                  value={statusInput}
-                  onChange={(e) =>
-                    handleStatusChange(e.target.value as ResourceStatus)
-                  }
-                  disabled={isUpdatingProgress}
-                  className="w-full cursor-pointer appearance-none rounded-lg border border-neutral-300 bg-white px-3 py-1.5 pr-8 text-sm text-neutral-900 outline-none focus:border-neutral-500 disabled:opacity-50"
+        <div className="library-detail-columns">
+          <main className="library-detail-main">
+            {isDemo ? (
+              <section className="library-detail-section library-demo-callout">
+                <div>
+                  <span className="library-detail-section-label">EXAMPLE RESOURCE</span>
+                  <p>Save this book to your library to track progress and add private notes.</p>
+                </div>
+                <button
+                  type="button"
+                  className="library-primary-action"
+                  disabled={isAddingDemo}
+                  onClick={() => void handleAddDemo()}
                 >
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
+                  <Plus size={15} />
+                  {isAddingDemo ? 'Adding…' : 'Add to my library'}
+                </button>
+                {demoError && <p role="alert" className="library-inline-error">{demoError}</p>}
+              </section>
+            ) : (
+              <>
+                <section className="library-detail-section">
+                  <h2><span>[01]</span> PERSONAL NOTE</h2>
+                  <textarea
+                    value={noteDraft}
+                    onChange={(event) => setNoteDraft(event.target.value)}
+                    placeholder="What idea do you want to carry into your day?"
+                    aria-label="Personal note for this book"
+                    rows={4}
+                    disabled={isSavingNote}
+                  />
+                  <div className="library-detail-note-footer">
+                    <span>Private to your workspace</span>
+                    <button
+                      type="button"
+                      className="library-primary-action"
+                      disabled={isSavingNote || !noteDraft.trim()}
+                      onClick={() => void handleSaveNote()}
+                    >
+                      <Check size={14} />
+                      {isSavingNote ? 'Saving…' : 'Save note'}
+                    </button>
+                  </div>
+                  {noteError && <p role="alert" className="library-inline-error">{noteError}</p>}
+                </section>
+
+                <section className="library-detail-section library-book-timeline">
+                  <h2><span>[02]</span> TIMELINE HISTORY</h2>
+                  <article>
+                    <time>{formatDate(book.createdAt)}</time>
+                    <i aria-hidden="true" />
+                    <div>
+                      <small>RESOURCE ADDED</small>
+                      <strong>{book.title} added to your library</strong>
+                    </div>
+                  </article>
+                  {book.updatedAt !== book.createdAt && (
+                    <article>
+                      <time>{formatDate(book.updatedAt)}</time>
+                      <i aria-hidden="true" />
+                      <div>
+                        <small>READING PROGRESS</small>
+                        <strong>{progress}% complete · {status}</strong>
+                      </div>
+                    </article>
+                  )}
+                  {linkedNotes.map((note) => (
+                    <article key={note._id}>
+                      <time>{formatDate(note.createdAt)}</time>
+                      <i aria-hidden="true" />
+                      <div>
+                        <small>PERSONAL NOTE</small>
+                        <strong>{note.title || 'Reflection saved'}</strong>
+                      </div>
+                    </article>
                   ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-600" />
-              </div>
-            </div>
-          </div>
+                </section>
+              </>
+            )}
 
-          <div className="flex justify-end pt-1">
-            <button
-              type="submit"
-              disabled={isUpdatingProgress}
-              className="rounded-lg bg-[#171A20] hover:bg-[#393C41] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {isUpdatingProgress ? 'Saving…' : 'Save progress'}
-            </button>
-          </div>
-        </form>
+            {!isDemo && (
+              <>
+                <section className="library-detail-section library-attachment-section">
+                  <div className="library-detail-section-heading">
+                    <h2><span>[04]</span> READING FILE</h2>
+                    {book.attachment && (
+                      <span>{isEpub ? 'EPUB' : 'PDF'} · {formatFileSize(book.attachment.size)}</span>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.epub,application/pdf,application/epub+zip"
+                    className="sr-only"
+                    disabled={isUploading}
+                    onChange={(event) => void handleFileChange(event)}
+                  />
+                  {attachmentError && <p role="alert" className="library-inline-error">{attachmentError}</p>}
+                  {book.attachment ? (
+                    <div className="library-attachment-row">
+                      <div>
+                        <BookOpen size={17} />
+                        <span>
+                          <strong>{book.attachment.fileName}</strong>
+                          <small>{formatFileSize(book.attachment.size)} · saved to your private library</small>
+                        </span>
+                      </div>
+                      <div className="library-attachment-actions">
+                        <button
+                          type="button"
+                          disabled={isUploading}
+                          onClick={() => isEpub ? onOpenEpubReader(book) : onOpenPdfReader(book)}
+                        >
+                          <BookOpen size={14} /> Read
+                        </button>
+                        <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()}>
+                          <RefreshCw size={14} /> Replace
+                        </button>
+                        <button type="button" disabled={isUploading} onClick={() => void handleRemoveAttachment()}>
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="library-upload-action"
+                      disabled={isUploading}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload size={16} />
+                      {isUploading ? 'Uploading…' : 'Attach a PDF or EPUB'}
+                    </button>
+                  )}
+                </section>
 
-        {/* Footer Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#EEEEEE]">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={isUpdatingProgress || isUploadingAttachment}
-              onClick={() => {
-                onClose();
-                onEdit(book);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <Pencil className="w-3.5 h-3.5" /> Edit book
-            </button>
+                <form
+                  onSubmit={(event) => void handleProgressSubmit(event)}
+                  className="library-detail-section library-progress-form"
+                >
+                  <div className="library-detail-section-heading">
+                    <h2><span>[05]</span> READING PROGRESS</h2>
+                    <strong>{progress}%</strong>
+                  </div>
+                  <div className="library-progress-track">
+                    <span style={{ width: `${progress}%` }} />
+                  </div>
+                  {progressError && <p role="alert" className="library-inline-error">{progressError}</p>}
+                  <div className="library-progress-controls">
+                    <label>
+                      Current page
+                      <input
+                        type="number"
+                        min={0}
+                        max={totalPages || 100000}
+                        value={currentPage}
+                        onChange={(event) => setCurrentPage(Number(event.target.value))}
+                        disabled={isUpdating}
+                      />
+                      {totalPages > 0 && <span>/ {totalPages}</span>}
+                    </label>
+                    <button type="submit" className="library-primary-action" disabled={isUpdating}>
+                      {isUpdating ? 'Saving…' : progressSaved ? 'Saved' : 'Save progress'}
+                    </button>
+                  </div>
+                </form>
 
-            <button
-              type="button"
-              disabled={isUpdatingProgress || isUploadingAttachment}
-              onClick={() => onDelete(book)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" /> Delete
-            </button>
-          </div>
+                <footer className="library-detail-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onEdit(book);
+                    }}
+                  >
+                    <Pencil size={14} /> Edit book
+                  </button>
+                  <button type="button" className="is-danger" onClick={() => onDelete(book)}>
+                    <Trash2 size={14} /> Delete
+                  </button>
+                </footer>
+              </>
+            )}
+          </main>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-[#F4F4F4] hover:bg-[#EEEEEE] text-[#171A20] rounded-lg text-sm font-medium transition-all cursor-pointer"
-          >
-            Close
-          </button>
+          <aside className="library-detail-aside">
+            <section>
+              <h2>CONNECTIONS</h2>
+              {isDemo ? (
+                DEMO_CONNECTIONS.map((connection) => (
+                  <div className="library-connection-card is-demo" key={connection.title}>
+                    <FileText size={15} />
+                    <span><strong>{connection.title}</strong><small>{connection.type}</small></span>
+                  </div>
+                ))
+              ) : linkedNotes.length ? (
+                linkedNotes.map((note) => (
+                  <button
+                    type="button"
+                    className="library-connection-card"
+                    key={note._id}
+                    onClick={() => onOpenNote(note)}
+                  >
+                    <FileText size={15} />
+                    <span>
+                      <strong>{note.title || 'Personal reflection'}</strong>
+                      <small>{note.quote || note.content || 'Related note'}</small>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p className="library-detail-muted">Notes you save here will appear as connections.</p>
+              )}
+            </section>
+
+            <section className="library-detail-meta">
+              <h2>RESOURCE DETAILS</h2>
+              <p><span>Type</span><strong>{book.type}</strong></p>
+              <p><span>Status</span><strong>{status}</strong></p>
+              {totalPages > 0 && <p><span>Pages</span><strong>{currentPage} / {totalPages}</strong></p>}
+              <p><span>Added</span><strong>{formatDate(book.createdAt)}</strong></p>
+              {book.link ? (
+                <a href={book.link} target="_blank" rel="noreferrer">
+                  <ExternalLink size={14} /> Open source
+                </a>
+              ) : (
+                <span className="library-detail-muted">No external source linked</span>
+              )}
+            </section>
+          </aside>
         </div>
-      </div>
+      </article>
     </ModalLayer>
   );
 }

@@ -4,12 +4,8 @@ import { Journal } from '../models/journal.model.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 
 const createJournal = asyncHandler(async (req, res) => {
-  const { title, content, mood } = req.body;
-
   const journal = await Journal.create({
-    title,
-    content,
-    mood: mood || 'Productive',
+    ...req.body,
     user: req.user._id,
   });
 

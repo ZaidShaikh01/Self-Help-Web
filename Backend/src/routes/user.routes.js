@@ -6,6 +6,8 @@ import {
   refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
+  getPreferences,
+  updatePreferences,
   changeCurrentName,
   logoutAll,
   getSessions,
@@ -35,6 +37,10 @@ router.route('/sessions/:id').delete(verifyJWT, revokeSession);
 // Secured Routes (Requires JWT authentication)
 router.route('/logout').post(verifyJWT, logoutUser);
 router.route('/current-user').get(verifyJWT, getCurrentUser);
+router
+  .route('/preferences')
+  .get(verifyJWT, getPreferences)
+  .patch(verifyJWT, updatePreferences);
 router.route('/change-password').post(verifyJWT, changeCurrentPassword);
 router.route('/update-account').patch(verifyJWT, changeCurrentName);
 

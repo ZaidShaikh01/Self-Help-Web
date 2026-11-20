@@ -29,6 +29,7 @@ export interface Habit {
 
   color: string;
   isArchived: boolean;
+  isPinned: boolean;
   currentStreak: number;
   longestStreak: number;
 
@@ -60,6 +61,7 @@ export interface CreateHabitInput {
   };
 
   color?: string;
+  isPinned?: boolean;
 }
 
 

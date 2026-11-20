@@ -1,5 +1,6 @@
 export type JournalEntryKind =
   | 'Reflection'
+  | 'Daily reflection'
   | 'Reading / practice'
   | 'Learning / study'
   | 'Weekly reflection';
@@ -20,11 +21,12 @@ export interface JournalEntry {
   tags: string[];
   related: JournalRelatedObject[];
   prompt?: string;
+  isPinned: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export type JournalEntryInput = Omit<
   JournalEntry,
-  'id' | 'createdAt' | 'updatedAt'
->;
+  'id' | 'createdAt' | 'updatedAt' | 'isPinned'
+> & { isPinned?: boolean };

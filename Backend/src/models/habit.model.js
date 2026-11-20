@@ -97,6 +97,7 @@ const habitSchema = new Schema(
     },
 
     isArchived: { type: Boolean, default: false },
+    isPinned: { type: Boolean, default: false },
 
     // Cached values, recomputed by recalculateStreaks() whenever a log changes
     currentStreak: { type: Number, default: 0, min: 0 },
@@ -115,6 +116,7 @@ habitSchema.index(
 );
 habitSchema.index({ user: 1, tags: 1 });
 habitSchema.index({ user: 1, isArchived: 1 });
+habitSchema.index({ user: 1, isPinned: 1 });
 
 /* ---------------------------- Cross-field rules ---------------------------- */
 

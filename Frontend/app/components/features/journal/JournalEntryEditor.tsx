@@ -9,6 +9,7 @@ import type {
 import { toLocalDateInput } from './journalUtils';
 
 const KINDS: JournalEntryKind[] = [
+  'Daily reflection',
   'Reflection',
   'Reading / practice',
   'Learning / study',
@@ -20,8 +21,9 @@ interface JournalEntryEditorProps {
   initialPrompt?: string;
   initialDate?: string;
   storageError: string;
+  isSaving: boolean;
   onCancel: () => void;
-  onSave: (input: JournalEntryInput) => void;
+  onSave: (input: JournalEntryInput) => Promise<JournalEntry | undefined>;
 }
 
 function relatedObjects(value: string, kind: JournalRelatedObject['kind']) {
@@ -41,6 +43,7 @@ export default function JournalEntryEditor({
   initialPrompt = '',
   initialDate,
   storageError,
+  isSaving,
   onCancel,
   onSave,
 }: JournalEntryEditorProps) {
@@ -62,7 +65,7 @@ export default function JournalEntryEditor({
   );
   const [time, setTime] = useState(initialTime);
   const [kind, setKind] = useState<JournalEntryKind>(
-    entry?.kind ?? 'Reflection',
+    entry?.kind ?? 'Daily reflection',
   );
   const [tagsText, setTagsText] = useState(entry?.tags.join(', ') ?? '');
   const [habitsText, setHabitsText] = useState(
@@ -84,7 +87,7 @@ export default function JournalEntryEditor({
     body: entry?.body ?? '',
     date: entry?.date ?? initialDate ?? toLocalDateInput(new Date()),
     time: initialTime,
-    kind: entry?.kind ?? 'Reflection',
+    kind: entry?.kind ?? 'Daily reflection',
     tagsText: entry?.tags.join(', ') ?? '',
     habitsText:
       entry?.related
@@ -176,8 +179,9 @@ export default function JournalEntryEditor({
     setFormError('');
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSaving) return;
     setFormError('');
     const cleanTitle = title.trim();
     if (!cleanTitle) {
@@ -212,7 +216,7 @@ export default function JournalEntryEditor({
       ],
       prompt: prompt.trim() || undefined,
     };
-    onSave(input);
+    await onSave(input);
   }
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
@@ -233,8 +237,9 @@ export default function JournalEntryEditor({
           type="submit"
           form="journal-entry-form"
           className="journal-primary-button"
+          disabled={isSaving}
         >
-          Save entry
+          {isSaving ? 'Saving…' : 'Save entry'}
         </button>
       </header>
 

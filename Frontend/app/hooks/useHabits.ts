@@ -29,6 +29,9 @@ export function useHabits(showArchived: boolean) {
     useState<HabitWeeklySummary | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedArchivedView, setLoadedArchivedView] = useState<boolean | null>(
+    null,
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -66,6 +69,7 @@ export function useHabits(showArchived: boolean) {
 
         setHabits(habitData);
         setTodayHabits(todayData);
+        setLoadedArchivedView(showArchived);
 
         try {
           const summary = await getHabitWeeklySummary(
@@ -240,6 +244,39 @@ export function useHabits(showArchived: boolean) {
     [loadData],
   );
 
+  const togglePinned = useCallback(async (habit: Habit) => {
+    setError('');
+    setNotice('');
+    setUpdatingId(habit._id);
+
+    try {
+      const updated = await updateHabit(habit._id, {
+        isPinned: !habit.isPinned,
+      });
+      setHabits((current) =>
+        current.map((item) => (item._id === updated._id ? updated : item)),
+      );
+      setTodayHabits((current) =>
+        current.map((item) =>
+          item.habit._id === updated._id ? { ...item, habit: updated } : item,
+        ),
+      );
+      setNotice(
+        updated.isPinned
+          ? `"${updated.title}" added to pinned items.`
+          : `"${updated.title}" removed from pinned items.`,
+      );
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Unable to update pinned status.',
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  }, []);
+
   const clearMessages = useCallback(() => {
     setError('');
     setNotice('');
@@ -250,6 +287,7 @@ export function useHabits(showArchived: boolean) {
     todayHabits,
     weeklySummary,
     isLoading,
+    loadedArchivedView,
     isSaving,
     updatingId,
     error,
@@ -262,5 +300,6 @@ export function useHabits(showArchived: boolean) {
     toggleProgress,
     adjustProgress,
     manageHabit,
+    togglePinned,
   };
 }

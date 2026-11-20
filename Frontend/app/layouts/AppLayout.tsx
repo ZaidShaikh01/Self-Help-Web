@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { getCurrentUser } from '~/lib/auth';
+import { getCurrentUser, type User } from '~/lib/auth';
 import { ApiRequestError } from '~/lib/api';
+import {
+  getUserPreferences,
+  PREFERENCES_SYNC_ERROR_EVENT,
+  PREFERENCES_SYNC_SUCCESS_EVENT,
+} from '~/lib/preferences';
 import ScrollProgress from '~/components/layout/ScrollProgress';
 import Header from '~/components/layout/Header';
-import Sidebar from '~/components/layout/Sidebar';
+import Sidebar, { applySidebarPreference } from '~/components/layout/Sidebar';
 import MobileNav from '~/components/layout/MobileNav';
 import { Button } from '~/components/ui/Button';
+import { AlertBanner } from '~/components/ui/AlertBanner';
 import Skeleton from '~/components/ui/Skeleton';
 import { useTheme } from '~/hooks/useTheme';
 
@@ -18,7 +24,7 @@ type AuthCheck = {
 export default function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, setTheme, toggleTheme } = useTheme();
   const isToday = pathname === '/dashboard';
   const isTimeline = pathname === '/timeline' || pathname.startsWith('/timeline/');
   const isInsights = pathname === '/insights' || pathname.startsWith('/insights/');
@@ -33,6 +39,24 @@ export default function AppLayout() {
 
   const [authCheck, setAuthCheck] = useState<AuthCheck>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [preferencesError, setPreferencesError] = useState('');
+  const [accountUser, setAccountUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const handleSyncError = (event: Event) => {
+      setPreferencesError((event as CustomEvent<string>).detail);
+    };
+    const handleSyncSuccess = () => setPreferencesError('');
+    window.addEventListener(PREFERENCES_SYNC_ERROR_EVENT, handleSyncError);
+    window.addEventListener(PREFERENCES_SYNC_SUCCESS_EVENT, handleSyncSuccess);
+    return () => {
+      window.removeEventListener(PREFERENCES_SYNC_ERROR_EVENT, handleSyncError);
+      window.removeEventListener(
+        PREFERENCES_SYNC_SUCCESS_EVENT,
+        handleSyncSuccess,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -41,12 +65,19 @@ export default function AppLayout() {
     setAuthCheck(null);
 
     getCurrentUser()
-      .then(() => {
+      .then(async (user) => {
+        if (active) setAccountUser(user);
+        try {
+          const preferences = await getUserPreferences();
+          if (active) {
+            if (preferences.theme) setTheme(preferences.theme);
+            applySidebarPreference(preferences.sidebarCollapsed);
+          }
+        } catch (error) {
+          console.error('Account preferences could not be loaded.', error);
+        }
         if (active) {
-          setAuthCheck({
-            pathname,
-            status: 'authenticated',
-          });
+          setAuthCheck({ pathname, status: 'authenticated' });
         }
       })
       .catch((error: unknown) => {
@@ -68,7 +99,7 @@ export default function AppLayout() {
     return () => {
       active = false;
     };
-  }, [pathname, navigate, retryCount]);
+  }, [pathname, navigate, retryCount, setTheme]);
 
   // Do not render a route while its authentication check is pending.
   if (!authCheck || authCheck.pathname !== pathname) {
@@ -120,13 +151,32 @@ export default function AppLayout() {
     );
   }
 
+  const username = accountUser?.username || accountUser?.fullname || 'You';
+  const userInitial = username.trim().charAt(0).toUpperCase() || 'U';
+
   return (
     <div
       className={`app-root flex h-screen overflow-hidden bg-[var(--canvas)] text-[var(--text)] ${
         isToday ? 'app-root--today' : ''
       }`}
     >
-      <Sidebar onSearch={openSearch} onQuickCapture={openQuickCapture} />
+      {preferencesError && (
+        <div className="fixed left-1/2 top-3 z-[100] w-[min(100%-2rem,32rem)] -translate-x-1/2">
+          <AlertBanner
+            message={`Preference update could not be synced: ${preferencesError}`}
+            onDismiss={() => setPreferencesError('')}
+          />
+        </div>
+      )}
+      <Sidebar
+        onSearch={openSearch}
+        onQuickCapture={openQuickCapture}
+        user={{
+          name: username.toUpperCase(),
+          workspace: username.toUpperCase(),
+          initial: userInitial,
+        }}
+      />
 
       {/* Main Content Stage */}
       <div
@@ -140,6 +190,7 @@ export default function AppLayout() {
           onCreate={openQuickCapture}
           onToggleTheme={toggleTheme}
           dark={isDark}
+          user={{ name: username, initial: userInitial }}
           dashboardMode={isToday}
           scope={isToday || isTimeline || isInsights ? 'LOC' : undefined}
           section={

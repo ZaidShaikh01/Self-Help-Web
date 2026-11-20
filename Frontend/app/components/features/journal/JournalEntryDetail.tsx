@@ -1,3 +1,4 @@
+import { Pin } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Icon } from '~/components/ui/Icon';
@@ -7,18 +8,28 @@ import { formatDay, formatTime, parseInlineContent } from './journalUtils';
 interface JournalEntryDetailProps {
   entry: JournalEntry;
   storageError: string;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
+  onTogglePin: (id: string) => Promise<JournalEntry | undefined>;
 }
 
 export default function JournalEntryDetail({
   entry,
   storageError,
   onDelete,
+  onTogglePin,
 }: JournalEntryDetailProps) {
   const navigate = useNavigate();
   const actionsRef = useRef<HTMLDivElement>(null);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [notice, setNotice] = useState('');
+  const [isPinning, setIsPinning] = useState(false);
+
+  async function togglePin() {
+    setIsPinning(true);
+    const updated = await onTogglePin(entry.id);
+    if (updated) setNotice(updated.isPinned ? 'Entry pinned.' : 'Entry unpinned.');
+    setIsPinning(false);
+  }
 
   useEffect(() => {
     if (!actionsOpen) return;
@@ -52,12 +63,12 @@ export default function JournalEntryDetail({
     setActionsOpen(false);
   }
 
-  function deleteEntry() {
+  async function deleteEntry() {
     const confirmed = window.confirm(
       `Delete “${entry.title || 'Untitled reflection'}”? This cannot be undone.`,
     );
     if (!confirmed) return;
-    onDelete(entry.id);
+    await onDelete(entry.id);
   }
 
   const paragraphs = entry.body.split(/\n{2,}/).filter(Boolean);
@@ -74,6 +85,16 @@ export default function JournalEntryDetail({
           Journal
         </button>
         <div className="journal-detail-actions">
+          <button
+            type="button"
+            className="journal-quiet-button"
+            onClick={() => void togglePin()}
+            disabled={isPinning}
+            aria-pressed={entry.isPinned}
+          >
+            <Pin size={14} fill={entry.isPinned ? 'currentColor' : 'none'} />
+            {entry.isPinned ? 'Unpin' : 'Pin'}
+          </button>
           <button
             type="button"
             className="journal-quiet-button"

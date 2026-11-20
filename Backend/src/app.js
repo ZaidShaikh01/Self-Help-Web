@@ -89,6 +89,10 @@ import journalRouter from './routes/journal.routes.js';
 
 app.use('/api/v1/journals', journalRouter);
 
+import pinnedRouter from './routes/pinned.routes.js';
+
+app.use('/api/v1/pinned', pinnedRouter);
+
 // pdf routes
 import { pdfRouter, resourcePdfRouter } from './routes/pdf.routes.js';
 

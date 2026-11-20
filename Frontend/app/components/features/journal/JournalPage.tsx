@@ -19,10 +19,12 @@ export default function JournalPage() {
   const {
     entries,
     isReady,
+    isSaving,
     storageError,
     createEntry,
     updateEntry,
     deleteEntry,
+    togglePinned,
   } = useJournalEntries();
 
   const segments = location.pathname.split('/').filter(Boolean);
@@ -61,7 +63,15 @@ export default function JournalPage() {
   }
 
   if (isJournalHome) {
-    return <JournalHome entries={entries} storageError={storageError} />;
+    return (
+      <JournalHome
+        entries={entries}
+        storageError={storageError}
+        onTogglePin={(item) => {
+          void togglePinned(item.id);
+        }}
+      />
+    );
   }
 
   if (isEditor) {
@@ -80,14 +90,16 @@ export default function JournalPage() {
         initialPrompt={isNewEntry ? query.get('prompt') ?? '' : ''}
         initialDate={isNewEntry ? query.get('date') ?? undefined : undefined}
         storageError={storageError}
+        isSaving={isSaving}
         onCancel={() => navigate('/journal')}
-        onSave={(input) => {
+        onSave={async (input) => {
           const saved = entry
-            ? updateEntry(entry.id, input)
-            : createEntry(input);
+            ? await updateEntry(entry.id, input)
+            : await createEntry(input);
           if (saved) {
             navigate(`/journal/${encodeURIComponent(saved.id)}`);
           }
+          return saved;
         }}
       />
     );
@@ -105,9 +117,9 @@ export default function JournalPage() {
     <JournalEntryDetail
       entry={entry}
       storageError={storageError}
-      onDelete={(id) => {
-        deleteEntry(id);
-        navigate('/journal');
+      onTogglePin={togglePinned}
+      onDelete={async (id) => {
+        if (await deleteEntry(id)) navigate('/journal');
       }}
     />
   );

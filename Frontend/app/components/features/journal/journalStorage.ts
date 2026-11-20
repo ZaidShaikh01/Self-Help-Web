@@ -3,6 +3,11 @@ import { toLocalDateInput } from './journalUtils';
 
 export const JOURNAL_STORAGE_KEY = 'growth-os.journal.entries.v1';
 export const JOURNAL_UPDATED_EVENT = 'growth-os:journal-updated';
+export const JOURNAL_MIGRATION_KEY_PREFIX = 'growth-os.journal.migrated.v1:';
+
+export function journalStorageKeyForUser(userId: string) {
+  return `${JOURNAL_STORAGE_KEY}:${userId}`;
+}
 
 function isJournalEntry(value: unknown): value is JournalEntry {
   if (!value || typeof value !== 'object') return false;
@@ -14,6 +19,7 @@ function isJournalEntry(value: unknown): value is JournalEntry {
     typeof entry.date === 'string' &&
     typeof entry.time === 'string' &&
     typeof entry.kind === 'string' &&
+    (entry.isPinned === undefined || typeof entry.isPinned === 'boolean') &&
     Array.isArray(entry.tags) &&
     entry.tags.every((tag) => typeof tag === 'string') &&
     Array.isArray(entry.related) &&
@@ -45,6 +51,7 @@ function sampleEntry(
     kind,
     tags,
     related,
+    isPinned: false,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -88,8 +95,8 @@ export function createStarterEntries(): JournalEntry[] {
   ];
 }
 
-export function readJournalEntries() {
-  const saved = window.localStorage.getItem(JOURNAL_STORAGE_KEY);
+export function readJournalEntries(storageKey = JOURNAL_STORAGE_KEY) {
+  const saved = window.localStorage.getItem(storageKey);
   if (saved === null) return createStarterEntries();
 
   const parsed: unknown = JSON.parse(saved);
@@ -99,5 +106,8 @@ export function readJournalEntries() {
   ) {
     throw new Error('Saved journal entries have an invalid format.');
   }
-  return parsed;
+  return parsed.map((entry) => ({
+    ...entry,
+    isPinned: entry.isPinned ?? false,
+  }));
 }

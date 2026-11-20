@@ -3,6 +3,8 @@ import { flushSync } from 'react-dom';
 import { NavLink } from 'react-router';
 import { gsap } from 'gsap';
 import { Icon, type IconName } from '~/components/ui/Icon';
+import { getApiCacheUser } from '~/lib/api';
+import { updateUserPreferences } from '~/lib/preferences';
 
 interface User {
   name: string;
@@ -58,16 +60,29 @@ const listeners = new Set<() => void>();
 const readCollapsed = () => {
   try {
     return localStorage.getItem(COLLAPSE_KEY) === '1';
-  } catch {
+  } catch (error) {
+    console.warn('Sidebar preference could not be read locally.', error);
     return false;
   }
 };
-const writeCollapsed = (v: boolean) => {
+const writeCollapsed = (v: boolean, syncBackend = true) => {
   try {
     localStorage.setItem(COLLAPSE_KEY, v ? '1' : '0');
-  } catch {}
+  } catch (error) {
+    console.warn('Sidebar preference could not be saved locally.', error);
+  }
   listeners.forEach((l) => l());
+
+  if (syncBackend && getApiCacheUser()) {
+    void updateUserPreferences({ sidebarCollapsed: v }).catch((error: unknown) => {
+      console.error('Sidebar preference could not be synced.', error);
+    });
+  }
 };
+
+export function applySidebarPreference(collapsed: boolean) {
+  writeCollapsed(collapsed, false);
+}
 function useStoredCollapsed(): [boolean, (v: boolean) => void] {
   const value = useSyncExternalStore(
     (cb) => {

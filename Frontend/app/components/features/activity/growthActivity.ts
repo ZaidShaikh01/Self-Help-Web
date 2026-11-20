@@ -10,9 +10,8 @@ import {
   type Resource,
 } from '~/lib/library';
 import {
-  readJournalEntries,
-  JOURNAL_STORAGE_KEY,
-} from '~/components/features/journal/journalStorage';
+  fetchJournalEntries,
+} from '~/lib/journal';
 import { toLocalDateInput } from '~/components/features/journal/journalUtils';
 import type { JournalEntry } from '~/components/features/journal/types';
 import type {
@@ -85,7 +84,6 @@ function createJournalEvent(entry: JournalEntry): GrowthActivityEvent {
     isSample: entry.id.startsWith('example-'),
   };
 }
-
 function createHabitEvents(days: HabitWeeklySummaryDay[]) {
   return days
     .filter((day) => day.completed > 0)
@@ -180,17 +178,13 @@ function createEvents(
 
 export async function loadGrowthActivity(): Promise<GrowthActivitySnapshot> {
   const { from, to } = getHistoryRange();
-  const journalEntriesPromise = Promise.resolve().then(() =>
-    readJournalEntries(),
-  );
-
   const [habits, habitSummary, resources, notes, journalEntries] =
     await Promise.all([
       getHabits(),
       getHabitWeeklySummary(from, to),
       fetchAllResources(),
       fetchAllNotes(),
-      journalEntriesPromise,
+      fetchJournalEntries(),
     ]);
 
   return {
@@ -210,5 +204,3 @@ export async function loadGrowthActivity(): Promise<GrowthActivitySnapshot> {
     ),
   };
 }
-
-export { JOURNAL_STORAGE_KEY };

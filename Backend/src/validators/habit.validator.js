@@ -47,6 +47,7 @@ export const createHabitSchema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a hex value like #4f46e5')
     .optional(),
+  isPinned: z.boolean().optional(),
 });
 
 

@@ -34,6 +34,7 @@ const resourceSchema = new Schema(
     pages: { type: Number, min: 1 },
     currentPage: { type: Number, min: 0, default: 0 },
     summary: { type: String, trim: true, maxlength: 1000 },
+    isPinned: { type: Boolean, default: false },
     attachment: {
       key: { type: String, trim: true },
       fileName: { type: String, trim: true },
@@ -85,5 +86,6 @@ resourceSchema.pre('validate', async function () {
 // Bug Fix: Prevent duplicate resource titles per user
 resourceSchema.index({ user: 1, title: 1 }, { unique: true });
 resourceSchema.index({ user: 1, createdAt: -1 });
+resourceSchema.index({ user: 1, type: 1, isPinned: 1, updatedAt: -1 });
 
 export const Resource = mongoose.model('Resource', resourceSchema);

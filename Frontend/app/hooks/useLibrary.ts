@@ -102,6 +102,28 @@ export function useLibrary() {
     [],
   );
 
+  const toggleBookPin = useCallback(async (id: string) => {
+    const book = books.find((item) => item._id === id);
+    if (!book) return;
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const updated = await updateResource(id, { isPinned: !book.isPinned });
+      setBooks((current) =>
+        current.map((item) => (item._id === id ? updated : item)),
+      );
+      return updated;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update pinned status.';
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [books]);
+
   const updateBookProgress = useCallback(
     async (id: string, currentPage: number, status?: ResourceStatus) => {
       setIsSaving(true);
@@ -388,6 +410,7 @@ export function useLibrary() {
     reload: loadLibrary,
     addBook,
     updateBook,
+    toggleBookPin,
     updateBookProgress,
     deleteBook,
     uploadAttachment,

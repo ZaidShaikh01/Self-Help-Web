@@ -31,6 +31,7 @@ export interface Resource {
   currentPage: number;
   summary?: string;
   rating?: number;
+  isPinned: boolean;
   progress: number;
   attachment?: AttachmentMetadata;
   createdAt: string;
@@ -55,6 +56,7 @@ export interface CreateResourceInput {
   currentPage?: number;
   summary?: string;
   rating?: number;
+  isPinned?: boolean;
 }
 
 export type UpdateResourceInput = Partial<CreateResourceInput>;

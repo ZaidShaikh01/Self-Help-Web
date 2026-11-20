@@ -1,3 +1,4 @@
+import { Pin } from 'lucide-react';
 import { Link } from 'react-router';
 import { Icon } from '~/components/ui/Icon';
 import type { JournalEntry } from './types';
@@ -5,9 +6,13 @@ import { formatDay, formatTime } from './journalUtils';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
+  onTogglePin: (entry: JournalEntry) => void;
 }
 
-export default function JournalEntryCard({ entry }: JournalEntryCardProps) {
+export default function JournalEntryCard({
+  entry,
+  onTogglePin,
+}: JournalEntryCardProps) {
   const preview = entry.body
     .replace(/^\s*>\s?/gm, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -53,6 +58,16 @@ export default function JournalEntryCard({ entry }: JournalEntryCardProps) {
           className="journal-entry-arrow"
         />
       </Link>
+      <button
+        type="button"
+        className="journal-entry-pin"
+        aria-label={`${entry.isPinned ? 'Unpin' : 'Pin'} ${entry.title || 'reflection'}`}
+        aria-pressed={entry.isPinned}
+        title={entry.isPinned ? 'Unpin entry' : 'Pin entry'}
+        onClick={() => onTogglePin(entry)}
+      >
+        <Pin size={15} fill={entry.isPinned ? 'currentColor' : 'none'} />
+      </button>
     </article>
   );
 }

@@ -19,6 +19,7 @@ import LibraryToolbar, {
 } from '~/components/features/library/LibraryToolbar';
 import NotesGrid from '~/components/features/library/NotesGrid';
 import PdfReaderModal from '~/components/features/library/PdfReaderModal';
+import { DEMO_BOOKS } from '~/components/features/library/demoLibrary';
 import Skeleton from '~/components/ui/Skeleton';
 import { useLibrary } from '~/hooks/useLibrary';
 import type {
@@ -83,6 +84,7 @@ export default function Library() {
     reload,
     addBook,
     updateBook,
+    toggleBookPin,
     updateBookProgress,
     deleteBook,
     uploadAttachment,
@@ -111,7 +113,10 @@ export default function Library() {
 
   const activeSelectedBook = useMemo(() => {
     if (!selectedBook) return null;
-    return books.find((b) => b._id === selectedBook._id) || null;
+    return (
+      books.find((b) => b._id === selectedBook._id) ||
+      (selectedBook._id.startsWith('demo-') ? selectedBook : null)
+    );
   }, [books, selectedBook]);
 
   const activeReadingBook = useMemo(() => {
@@ -173,6 +178,35 @@ export default function Library() {
     await addNote(data);
   };
 
+  const handleAddDemoBook = async (demoBook: Resource) => {
+    const created = await addBook({
+      title: demoBook.title,
+      author: demoBook.author ?? '',
+      category: demoBook.category ?? 'Productivity',
+      pages: demoBook.pages ?? 1,
+    });
+    setSelectedBook(created);
+  };
+
+  const handleOpenLinkedNote = (note: Note) => {
+    closeBookDetails();
+    setActiveTab('notes');
+    setEditingNote(note);
+  };
+
+  const closeBookDetails = () => {
+    setSelectedBook(null);
+    handledResourceId.current = '';
+    const params = new URLSearchParams(location.search);
+    if (params.has('resource')) {
+      params.delete('resource');
+      const query = params.toString();
+      navigate(`${location.pathname}${query ? `?${query}` : ''}`, {
+        replace: true,
+      });
+    }
+  };
+
   const handleUpdateProgress = async (
     id: string,
     currentPage: number,
@@ -200,7 +234,7 @@ export default function Library() {
 
     try {
       await deleteBook(book._id);
-      setSelectedBook(null);
+      closeBookDetails();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete book.');
     }
@@ -330,8 +364,10 @@ export default function Library() {
         ) : activeTab === 'books' ? (
           <BookGrid
             books={filteredBooks}
+            demoBooks={DEMO_BOOKS}
             viewMode={viewMode}
             onSelectBook={setSelectedBook}
+            onTogglePin={(book) => toggleBookPin(book._id)}
             isFiltered={Boolean(
               searchQuery ||
                 selectedCategory !== 'All' ||
@@ -346,6 +382,9 @@ export default function Library() {
             isFiltered={Boolean(searchQuery)}
             onEdit={(note) => setEditingNote(note)}
             onDelete={handleDeleteNote}
+            onAddDemo={async (note) => {
+              await addNote(note);
+            }}
           />
         )}
       </section>
@@ -353,16 +392,23 @@ export default function Library() {
       {/* BOOK DETAIL MODAL */}
       <BookDetailModal
         book={activeSelectedBook}
-        onClose={() => setSelectedBook(null)}
+        notes={notes}
+        onClose={closeBookDetails}
         onEdit={(book) => setEditingBook(book)}
         onDelete={handleDeleteBook}
         onUpdateProgress={handleUpdateProgress}
+        onTogglePin={async (id) => {
+          await toggleBookPin(id);
+        }}
         onUploadAttachment={async (id, file) => {
           await uploadAttachment(id, file);
         }}
         onRemoveAttachment={async (id) => {
           await removeAttachment(id);
         }}
+        onSaveNote={handleSaveNote}
+        onOpenNote={handleOpenLinkedNote}
+        onAddDemo={handleAddDemoBook}
         onOpenPdfReader={(book) => {
           setSelectedBook(null);
           setReadingBook(book);

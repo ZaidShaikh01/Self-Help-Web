@@ -54,9 +54,17 @@ const updatePasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+const updatePreferencesSchema = z
+  .object({
+    theme: z.enum(['light', 'dark']).optional(),
+    sidebarCollapsed: z.boolean().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'Provide a preference to update');
+
 export {
   registerSchema,
   loginSchema,
   updateFullNameSchema,
   updatePasswordSchema,
+  updatePreferencesSchema,
 };

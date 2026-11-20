@@ -16,6 +16,7 @@ interface HabitListProps {
   updatingId: string | null;
   onEdit: (habit: Habit) => void;
   onViewHistory: (habit: Habit) => void;
+  onTogglePin: (habit: Habit) => void;
   onProgress: (item: TodayHabit) => void;
   onAdjustProgress: (item: TodayHabit, change: ProgressChange) => void;
   onManage: (
@@ -36,6 +37,7 @@ export default function HabitList({
   updatingId,
   onEdit,
   onViewHistory,
+  onTogglePin,
   onProgress,
   onAdjustProgress,
   onManage,
@@ -109,6 +111,7 @@ export default function HabitList({
               isUpdating={updatingId === habit._id}
               onEdit={onEdit}
               onViewHistory={onViewHistory}
+              onTogglePin={onTogglePin}
               onProgress={onProgress}
               onAdjustProgress={onAdjustProgress}
               onManage={onManage}

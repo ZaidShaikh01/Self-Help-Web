@@ -31,6 +31,7 @@ const baseResourceSchema = z.object({
   pages: z.number().int().min(1).max(100000).optional(),
   currentPage: z.number().int().min(0).max(100000).optional(),
   summary: z.string().trim().max(1000).optional(),
+  isPinned: z.boolean().optional(),
 });
 
 export const createResourceSchema = baseResourceSchema.refine(

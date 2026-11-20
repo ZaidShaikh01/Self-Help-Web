@@ -11,6 +11,7 @@ import {
   loginSchema,
   updateFullNameSchema,
   updatePasswordSchema,
+  updatePreferencesSchema,
 } from '../validators/auth.validator.js';
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -212,6 +213,43 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, req.user, 'Current user fetched successfully'));
 });
 
+const getPreferences = asyncHandler(async (req, res) => {
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      req.user.preferences || { sidebarCollapsed: false },
+      'Preferences fetched successfully',
+    ),
+  );
+});
+
+const updatePreferences = asyncHandler(async (req, res) => {
+  const result = updatePreferencesSchema.safeParse(req.body);
+  if (!result.success) {
+    throw new ApiError(
+      400,
+      result.error.issues[0].message || 'Invalid preference data',
+    );
+  }
+
+  const updates = Object.fromEntries(
+    Object.entries(result.data).map(([key, value]) => [
+      `preferences.${key}`,
+      value,
+    ]),
+  );
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: updates },
+    { new: true, runValidators: true },
+  ).select('-password');
+
+  if (!user) throw new ApiError(404, 'User not found');
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user.preferences, 'Preferences updated'));
+});
+
 const changeCurrentName = asyncHandler(async (req, res) => {
   const result = updateFullNameSchema.safeParse(req.body);
 
@@ -257,5 +295,7 @@ export {
   revokeSession,
   changeCurrentPassword,
   getCurrentUser,
+  getPreferences,
+  updatePreferences,
   changeCurrentName,
 };

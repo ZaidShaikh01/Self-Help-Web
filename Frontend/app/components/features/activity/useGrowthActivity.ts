@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { loadGrowthActivity } from './growthActivity';
 import {
-  JOURNAL_STORAGE_KEY,
-  loadGrowthActivity,
-} from './growthActivity';
-import { JOURNAL_UPDATED_EVENT } from '~/components/features/journal/journalStorage';
+  JOURNAL_UPDATED_EVENT,
+  journalStorageKeyForUser,
+} from '~/components/features/journal/journalStorage';
+import { getApiCacheUser } from '~/lib/api';
 import type { GrowthActivitySnapshot } from './types';
 
 export default function useGrowthActivity() {
@@ -47,7 +48,13 @@ export default function useGrowthActivity() {
     const handleFocus = () => reload();
     const handleJournalUpdate = () => reload();
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === JOURNAL_STORAGE_KEY || event.key === null) reload();
+      const userId = getApiCacheUser();
+      if (
+        event.key === (userId ? journalStorageKeyForUser(userId) : null) ||
+        event.key === null
+      ) {
+        reload();
+      }
     };
     window.addEventListener('focus', handleFocus);
     window.addEventListener('storage', handleStorage);

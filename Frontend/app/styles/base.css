@@ -134,6 +134,11 @@ select {
     box-shadow 180ms ease;
 }
 
+select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,

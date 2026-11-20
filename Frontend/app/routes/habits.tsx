@@ -14,7 +14,9 @@ import type { Habit } from '~/lib/habits';
 export default function HabitsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived, setShowArchived] = useState(
+    () => new URLSearchParams(location.search).get('archived') === 'true',
+  );
   const [selectedTag, setSelectedTag] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -27,6 +29,7 @@ export default function HabitsPage() {
     todayHabits,
     weeklySummary,
     isLoading,
+    loadedArchivedView,
     isSaving,
     updatingId,
     error,
@@ -38,7 +41,14 @@ export default function HabitsPage() {
     toggleProgress,
     adjustProgress,
     manageHabit,
+    togglePinned,
   } = useHabits(showArchived);
+
+  useEffect(() => {
+    setShowArchived(
+      new URLSearchParams(location.search).get('archived') === 'true',
+    );
+  }, [location.search]);
 
   useEffect(() => {
     const state = location.state as { openQuickCapture?: boolean } | null;
@@ -53,6 +63,33 @@ export default function HabitsPage() {
     location.key,
     location.pathname,
     location.state,
+    navigate,
+  ]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const focusId = params.get('focus');
+    const requestedArchivedView = params.get('archived') === 'true';
+    if (
+      !focusId ||
+      isLoading ||
+      loadedArchivedView !== requestedArchivedView
+    ) return;
+
+    const focusedHabit = habits.find((habit) => habit._id === focusId);
+    if (focusedHabit) setSearch(focusedHabit.title);
+
+    params.delete('focus');
+    const query = params.toString();
+    navigate(`${location.pathname}${query ? `?${query}` : ''}`, {
+      replace: true,
+    });
+  }, [
+    habits,
+    isLoading,
+    loadedArchivedView,
+    location.pathname,
+    location.search,
     navigate,
   ]);
 
@@ -125,7 +162,15 @@ export default function HabitsPage() {
     clearMessages();
     setSearch('');
     setSelectedTag('all');
-    setShowArchived((current) => !current);
+    const nextArchivedView = !showArchived;
+    setShowArchived(nextArchivedView);
+    const params = new URLSearchParams(location.search);
+    if (nextArchivedView) params.set('archived', 'true');
+    else params.delete('archived');
+    const query = params.toString();
+    navigate(`${location.pathname}${query ? `?${query}` : ''}`, {
+      replace: true,
+    });
   }
 
   return (
@@ -257,6 +302,9 @@ export default function HabitsPage() {
           updatingId={updatingId}
           onEdit={openEditForm}
           onViewHistory={openHistory}
+          onTogglePin={(habit) => {
+            void togglePinned(habit);
+          }}
           onProgress={(item) => void toggleProgress(item)}
           onAdjustProgress={(item, change) => void adjustProgress(item, change)}
           onManage={(habit, action) => {

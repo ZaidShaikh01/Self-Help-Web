@@ -1,3 +1,4 @@
+import { Pin } from 'lucide-react';
 import { Icon } from '~/components/ui/Icon';
 import type { Habit, TodayHabit } from '~/lib/habits';
 import type { ProgressChange } from '~/hooks/useHabits';
@@ -9,6 +10,7 @@ interface HabitRowProps {
   isUpdating: boolean;
   onEdit: (habit: Habit) => void;
   onViewHistory: (habit: Habit) => void;
+  onTogglePin: (habit: Habit) => void;
   onProgress: (item: TodayHabit) => void;
   onAdjustProgress: (item: TodayHabit, change: ProgressChange) => void;
   onManage: (
@@ -36,6 +38,7 @@ export default function HabitRow({
   isUpdating,
   onEdit,
   onViewHistory,
+  onTogglePin,
   onProgress,
   onAdjustProgress,
   onManage,
@@ -146,6 +149,22 @@ export default function HabitRow({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+        <button
+          type="button"
+          disabled={isUpdating}
+          onClick={() => onTogglePin(habit)}
+          aria-label={`${habit.isPinned ? 'Unpin' : 'Pin'} ${habit.title}`}
+          aria-pressed={habit.isPinned}
+          title={habit.isPinned ? 'Unpin habit' : 'Pin habit'}
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-colors disabled:opacity-50 ${
+            habit.isPinned
+              ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-text)]'
+              : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] hover:border-[var(--border-strong)] hover:text-[var(--accent)]'
+          }`}
+        >
+          <Pin size={14} fill={habit.isPinned ? 'currentColor' : 'none'} />
+        </button>
+
         <button
           type="button"
           disabled={isUpdating}

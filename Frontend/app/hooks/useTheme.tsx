@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { getApiCacheUser } from '~/lib/api';
+import { updateUserPreferences } from '~/lib/preferences';
 
 export type Theme = 'light' | 'dark';
 
 interface ThemeContextValue {
   theme: Theme;
   isDark: boolean;
+  setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
 
@@ -30,7 +33,14 @@ function getInitialTheme(): Theme {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const toggleTheme = () => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+
+    if (getApiCacheUser()) {
+      void updateUserPreferences({ theme: nextTheme }).catch((error: unknown) => {
+        console.error('Theme preference could not be synced.', error);
+      });
+    }
   };
 
   useEffect(() => {
@@ -46,7 +56,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider
-      value={{ theme, isDark: theme === 'dark', toggleTheme }}
+      value={{ theme, isDark: theme === 'dark', setTheme, toggleTheme }}
     >
       {children}
     </ThemeContext.Provider>

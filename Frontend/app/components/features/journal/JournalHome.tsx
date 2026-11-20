@@ -24,11 +24,13 @@ const PROMPTS = [
 interface JournalHomeProps {
   entries: JournalEntry[];
   storageError: string;
+  onTogglePin: (entry: JournalEntry) => void;
 }
 
 export default function JournalHome({
   entries,
   storageError,
+  onTogglePin,
 }: JournalHomeProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -187,7 +189,11 @@ export default function JournalHome({
         {filteredEntries.length > 0 ? (
           <div className="journal-entry-list">
             {filteredEntries.map((entry) => (
-              <JournalEntryCard key={entry.id} entry={entry} />
+              <JournalEntryCard
+                key={entry.id}
+                entry={entry}
+                onTogglePin={onTogglePin}
+              />
             ))}
           </div>
         ) : (

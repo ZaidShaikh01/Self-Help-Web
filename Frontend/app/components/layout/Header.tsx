@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import { Pin } from 'lucide-react';
 import { logoutRequest } from '~/lib/auth';
 import { ApiRequestError } from '~/lib/api';
 import { Icon } from '~/components/ui/Icon';
 import { IconButton } from '~/components/ui/Button';
+import PinnedItemsDialog from '~/components/features/pinned/PinnedItemsDialog';
 
 export interface HeaderProps {
   section?: string;
@@ -43,6 +45,7 @@ export default function Header({
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pinnedDialogOpen, setPinnedDialogOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -174,6 +177,16 @@ export default function Header({
           <Icon name="plus" size={17} />
         </button>
 
+        <button
+          type="button"
+          onClick={() => setPinnedDialogOpen(true)}
+          aria-label="Open pinned items"
+          title="Pinned items"
+          className="icon-button"
+        >
+          <Pin size={16} />
+        </button>
+
         {/* Notifications */}
         <button
           type="button"
@@ -219,10 +232,11 @@ export default function Header({
           <button
             ref={menuButtonRef}
             type="button"
-            aria-label="Account menu"
+            aria-label={`Account menu for ${user.name ?? 'your account'}`}
             aria-haspopup="menu"
             aria-controls="account-menu"
             aria-expanded={menuOpen}
+            title={user.name}
             onKeyDown={(event) => {
               if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
               event.preventDefault();
@@ -282,6 +296,9 @@ export default function Header({
           )}
         </div>
       </div>
+      {pinnedDialogOpen && (
+        <PinnedItemsDialog onClose={() => setPinnedDialogOpen(false)} />
+      )}
     </header>
   );
 }

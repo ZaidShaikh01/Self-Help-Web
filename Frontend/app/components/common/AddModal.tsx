@@ -200,13 +200,13 @@ const AddModal: React.FC<AddModalProps> = ({
     <ModalLayer
       canDismiss={!isSubmitting}
       onClose={onClose}
-      className="fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
+      className="library-modal-backdrop fixed inset-0 z-[10000] grid place-items-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4"
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-modal-title"
-        className="flex max-h-[90vh] w-full max-w-[708px] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
+        className="library-modal-panel flex max-h-[90vh] w-full max-w-[708px] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
       >
         {/* Header */}
         <div className="relative shrink-0 border-b border-[var(--border-subtle)] px-5 pb-4 pt-5 sm:px-7 sm:pb-4 sm:pt-6">
@@ -234,7 +234,7 @@ const AddModal: React.FC<AddModalProps> = ({
         {submitError && (
           <div
             role="alert"
-            className="border-b border-red-200 bg-red-50 px-5 py-3 text-xs text-red-700 sm:px-7"
+            className="border-b border-[var(--danger-border)] bg-[var(--danger-soft)] px-5 py-3 text-xs text-[var(--danger-text)] sm:px-7"
           >
             {submitError}
           </div>
